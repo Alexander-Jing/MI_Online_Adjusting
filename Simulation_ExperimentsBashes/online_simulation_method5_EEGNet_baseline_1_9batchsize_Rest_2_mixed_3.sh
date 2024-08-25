@@ -4,7 +4,7 @@
 program_path="Online_simulation/Online_train_EEGNet_simulation_method5_baseline_1_9batchsize_Rest_2_mixed_3.py"
 
 # 你的工作目录的路径
-workspace_folder="/home/jyt/workspace/MI_Online_Updating"
+workspace_folder="/home/jyt/workspace/MI_Online_Adjusting"
 
 # 改变当前工作目录
 cd $workspace_folder
