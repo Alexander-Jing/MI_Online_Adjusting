@@ -14,24 +14,23 @@ from tqdm import trange
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from helpers.models import EEGNetFea, ConvEncoderResBN, ConvEncoder3ResBN, ConvEncoderCls, ConvEncoderClsFea, ResEncoderfinetune, ConvEncoder3_ClsFeaTL, ConvEncoder_OutputClsFeaTL, ConvEncoder_OutputClsHeavyFeaTL
-from helpers.brain_data import Offline_read_csv, brain_dataset, Online_read_csv, Online_simulation_read_csv, Online_simulation_read_csv_windows_preprocess_normalization
-from helpers.utils import seed_everything, makedir_if_not_exist, plot_confusion_matrix, \
-    save_pickle, train_one_epoch, train_one_epoch_fea, train_update, eval_model, eval_model_fea, train_one_epoch_MMD, save_training_curves_FixedTrainValSplit, \
-        write_performance_info_FixedTrainValSplit, write_program_time, eval_model_confusion_matrix_fea, train_one_epoch_MMDavg, write_inference_time
-from helpers.utils import Offline_write_performance_info_FixedTrainValSplit, Offline_write_performance_info_FixedTrainValSplit_ConfusionMatrix, \
-    eval_model_confusion_matrix, accuracy_iteration_plot,str2bool,accuracy_save2csv, train_one_epoch_MMD_Weights, compute_total_accuracy_per_class,\
-    accuracy_perclass_save2csv, accuracy_perclass_iteration_plot, eval_model_fea_exemplars, eval_model_fea_exemplars_distillation, train_one_epoch_fea_distillation,\
-        eval_model_fea_exemplars_distillation_label, eval_model_fea_exemplars_distillation_datafea_logitlabel, train_one_epoch_logit_distillation, train_one_epoch_label_distillation, \
-            train_one_epoch_logitlabel_distillation, eval_model_fea_loss, train_one_epoch_fea_selfpace, train_one_epoch_fea_selfpace_quantiles, train_one_epoch_fea_selfpace_weights, train_one_epoch_fea_selfpace_quantiles_rank
+from helpers.models import EEGNetFea, ConvEncoder3ResBN, ResEncoderfinetune, ConvEncoder_OutputClsFeaTL
+from helpers.brain_data import brain_dataset, Online_simulation_read_csv_windows, Online_simulation_read_csv_windows_preprocess_normalization
+from helpers.utils import seed_everything, makedir_if_not_exist, \
+    save_pickle, train_one_epoch_fea, eval_model_fea, save_training_curves_FixedTrainValSplit, \
+        write_program_time, eval_model_confusion_matrix_fea, write_inference_time
+from helpers.utils import Offline_write_performance_info_FixedTrainValSplit_ConfusionMatrix, \
+    accuracy_iteration_plot,str2bool,accuracy_save2csv, compute_total_accuracy_per_class,\
+    accuracy_perclass_save2csv, accuracy_perclass_iteration_plot,\
+    eval_model_fea_exemplars_distillation_datafea_logitlabel, train_one_epoch_logitlabel_distillation, MultiClassFocalLoss
 from Offline_synthesizing_results.synthesize_hypersearch_for_a_subject import synthesize_hypersearch_confusionMatrix
-from Online_simulation_synthesizing.Online_simulation_synthesizing_subjects import Online_simulation_synthesizing_results, Online_simulation_synthesizing_results_comparison,\
-      Online_simulation_synthesizing_results_linear, Online_simulation_synthesizing_results_comparison_linear, Online_simulation_synthesizing_results_linear_perclass, Online_simulation_synthesizing_results_2cls_linear,\
-      Online_simulation_synthesizing_results_comparison_linear_2cls, Online_simulation_synthesizing_results_polynomial, Online_simulation_synthesizing_results_comparison_polynomial
+from Online_simulation_synthesizing.Online_simulation_synthesizing_subjects import Online_simulation_synthesizing_results_linear, Online_simulation_synthesizing_results_comparison_linear, Online_simulation_synthesizing_results_linear_perclass,\
+    Online_simulation_synthesizing_results_comparison_polynomial, Online_simulation_synthesizing_results_comparison_polynomial_optimized, Online_simulation_synthesizing_results_polynomial_avg, Online_simulation_synthesizing_results_polynomial_avgF1, \
+    Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass, Online_simulation_synthesizing_results_polynomial_avgF1_noRest, Online_simulation_synthesizing_results_polynomial_avgF1_Rest
 
 
 #for personal model, save the test prediction of each cv fold
-def Offline_EEGLM_simulation(args_dict):
+def Offline_EEGNet_simulation(args_dict):
     
     #parse args:
     gpu_idx = args_dict.gpu_idx
@@ -60,8 +59,8 @@ def Offline_EEGLM_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=40, proportion=proportion)
-        
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=40, proportion=proportion)  # use 50 trials of data for caliberation experiment
+    
     #dataset object
     group_train_set = brain_dataset(sub_train_feature_array, sub_train_label_array)
     group_val_set = brain_dataset(sub_val_feature_array, sub_val_label_array)
@@ -104,17 +103,17 @@ def Offline_EEGLM_simulation(args_dict):
             
             #create model
             model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
-            
             # reload weights from restore_file is specified
             if restore_file != 'None':
                 #restore_path = os.path.join(os.path.join(result_save_subject_checkpointdir, restore_file))
                 restore_path = restore_file
                 print('loading checkpoint: {}'.format(restore_path))
-            
+
             model = model.to(device)
 
             #create criterion and optimizer
             criterion = nn.CrossEntropyLoss()
+            #criterion = MultiClassFocalLoss(device=device, alpha=[0.33,0.33,0.33])
             optimizer = torch.optim.Adam(model.parameters(), lr=lr) #the authors used Adam instead of SGD
             #optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9)
     
@@ -135,10 +134,12 @@ def Offline_EEGLM_simulation(args_dict):
                 epoch_validation_accuracy.append(val_accuracy)
 
                 #update is_best flag, only when the accuracies of two classes of motor imagery are larger than random choice
-                if accuracy_per_class[1] > 0.33 and accuracy_per_class[2] > 0.33:
+                if accuracy_per_class[0] > 0.33 and accuracy_per_class[1] > 0.33 and accuracy_per_class[2] > 0.33:
                     is_best = val_accuracy >= best_val_accuracy
 
                 if is_best:
+
+                    is_best = False
                     best_val_accuracy = val_accuracy
 
                     torch.save(model.state_dict(), os.path.join(result_save_subject_checkpointdir, 'best_model.pt'))
@@ -153,7 +154,7 @@ def Offline_EEGLM_simulation(args_dict):
             save_training_curves_FixedTrainValSplit('training_curve.png', result_save_subject_trainingcurvedir, epoch_train_loss, epoch_train_accuracy, epoch_validation_accuracy)
 
             #save the model at last epoch
-            #torch.save(model.state_dict(), os.path.join(result_save_subject_checkpointdir, 'last_model.statedict'))
+            #torch.save(model.state_dict(), os.path.join(result_save_subject_checkpointdir, 'last_model.pt'))
             #encoder_to_use.save(os.path.join(result_save_subject_checkpointdir, 'last_model_encoder.pt'))
             #encoder_to_use_output.save(os.path.join(result_save_subject_checkpointdir, 'last_model_encoder_output.pt'))
             
@@ -168,7 +169,7 @@ def Offline_EEGLM_simulation(args_dict):
     write_program_time(os.path.join(Offline_result_save_rootdir, sub_name), total_time)
 
 
-def Online_updating_EEGLM_simulation(args_dict):
+def Online_updating_EEGNet_simulation(args_dict):
     """
     Online simulation part
     The online simulation part using the new weighting method to update the model
@@ -206,9 +207,9 @@ def Online_updating_EEGLM_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=50, \
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=60, \
                                                                                                 proportion=proportion, batch_size_online=batch_size_online, \
-                                                                                                    pattern=[1, 2, 1, 2, 0, 0, 2, 2, 1, 1, 0, 0, 
+                                                                                                    pattern=  [1, 2, 1, 2, 0, 0, 2, 2, 1, 1, 0, 0, 
                                                                                                                2, 1, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 
                                                                                                                2, 2, 2, 1, 0, 0, 1, 2, 1, 1, 0, 0, 
                                                                                                                2, 1, 2, 1, 0, 0, 2, 2, 1, 1, 0, 0, 
@@ -216,7 +217,6 @@ def Online_updating_EEGLM_simulation(args_dict):
                                                                                                                2, 1, 1, 2, 0, 0, 2, 1, 1, 2, 0, 0, 
                                                                                                                1, 2, 2, 2, 0, 0, 2, 1, 1, 1, 0, 0, 
                                                                                                                2, 2, 1, 1, 0, 0, 1, 2, 2, 1, 0, 0])
-    
      
     match = re.search(r"lr(\d+\.\d+)_dropout(\d+\.\d+)", restore_file)
     if match:
@@ -231,16 +231,13 @@ def Online_updating_EEGLM_simulation(args_dict):
     #encoder_to_use_output = ConvEncoder_OutputClsFeaTL(in_features=128, output_h=128, width=((3,3),), stride=((1,1),), num_features_for_classification=int(15*64), dropout=dropout)
     model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
 
-    experiment_name = 'lr{}_dropout{}'.format(lr, dropout)#experiment name: used for indicating hyper setting
-    print(experiment_name)
-
     #reload weights from restore_file is specified
     if restore_file != 'None':
         # move the best model from the offline experiments results
         Offline_path_encoder = os.path.join(Offline_result_save_rootdir, sub_name, restore_file, 'checkpoint', 'best_model.pt')  # using the name online_model.statedict for all the online manipulations
         
-        makedir_if_not_exist(os.path.join(Online_result_save_rootdir, sub_name, experiment_name, 'checkpoint'))
-        restore_path_encoder = os.path.join(Online_result_save_rootdir, sub_name, experiment_name, 'checkpoint', 'best_model.pt')  # using the name online_model.statedict for all the online manipulations
+        makedir_if_not_exist(os.path.join(Online_result_save_rootdir, sub_name, restore_file, 'checkpoint'))
+        restore_path_encoder = os.path.join(Online_result_save_rootdir, sub_name, restore_file, 'checkpoint', 'best_model.pt')  # using the name online_model.statedict for all the online manipulations
 
         # Copy Offline path to restore path
         shutil.copy(Offline_path_encoder, restore_path_encoder)
@@ -268,6 +265,8 @@ def Online_updating_EEGLM_simulation(args_dict):
     combined_feature_array = np.concatenate(combined_feature_array, axis=0)
     combined_label_array = np.concatenate(combined_label_array, axis=0)
 
+    experiment_name = 'lr{}_dropout{}'.format(lr, dropout)#experiment name: used for indicating hyper setting
+    print(experiment_name)
     #derived arg
     result_save_subjectdir = os.path.join(Online_result_save_rootdir, sub_name, experiment_name)
     result_save_subject_checkpointdir = os.path.join(result_save_subjectdir, 'checkpoint')
@@ -284,7 +283,7 @@ def Online_updating_EEGLM_simulation(args_dict):
     predict_accuracies = []
     class_predictions_arrays = []
     labels_arrays = []
-    
+
     accuracies_per_class = []
     accuracy_per_class_iters = []
 
@@ -293,84 +292,203 @@ def Online_updating_EEGLM_simulation(args_dict):
     accuracies_per_class_iterations.append([0, 0])
     accuracies_per_class_iterations.append([1, 0])
     accuracies_per_class_iterations.append([2, 0])
-
     
-    # this is the method in paper: 
-    # Wang H, Qi Y, Yao L, et al. A Human–Machine Joint Learning Framework to Boost Endogenous BCI Training[J]. IEEE Transactions on Neural Networks and Learning Systems, 2023. DOI: 10.1109/TNNLS.2023.3305621
-    # using the method for the simulation experiment
+    #best_val_accuracy = 40.0
+    #best_train_accuracy = 40.0
 
     for trial_idx in range(trial_nums):
         # generate the new data, simulating the online experiment 
         sub_train_feature_batches = sub_train_feature_array_1[trial_idx * batch_size_online : (trial_idx + 1) * batch_size_online, :, :]
         sub_train_label_batches = sub_train_label_array_1[trial_idx * batch_size_online : (trial_idx + 1) * batch_size_online]
 
+        # when the model begin to update in the new task, try to save the output of the old model for the old tasks so that the distillation method can be used 
+        if (trial_idx + 1) % update_wholeModel == 1:
+            print("********** Online mean-of-exemplars generation trial: {} ***********".format(trial_idx))
+            # load the model
+            if trial_idx > 0:
+                model.load_state_dict(torch.load(os.path.join(result_save_subject_checkpointdir, 'best_model.pt')))  
+
+            model = model.to(device)
+            
+            unique_labels = np.unique(combined_label_array)
+            # generate the exemplar of each class, including the 0(rest), 1,2(MI)
+            for label in unique_labels:
+                # for old classes, generating the exemplars class
+                if label == 0.0:
+                    indices = np.where(combined_label_array == label)[0]
+                    selected_indices_exemplars = indices
+                    sub_train_feature_exemplars = combined_feature_array[selected_indices_exemplars]
+                    sub_train_label_exemplars = combined_label_array[selected_indices_exemplars]
+                    _sub_exemplars = brain_dataset(sub_train_feature_exemplars, sub_train_label_exemplars)
+                    sub_exemplars = torch.utils.data.DataLoader(_sub_exemplars, batch_size=sub_train_feature_exemplars.shape[0], shuffle=False)
+                    Rest_output_data_exemplars, Rest_output_feas_exemplars, Rest_output_logits_exemplars, Rest_output_label_exemplars = eval_model_fea_exemplars_distillation_datafea_logitlabel(model, sub_exemplars, device, trial_pre)
+
+                if label == 1.0:
+                    indices = np.where(combined_label_array == label)[0]
+                    selected_indices_exemplars = indices
+                    sub_train_feature_exemplars = combined_feature_array[selected_indices_exemplars]
+                    sub_train_label_exemplars = combined_label_array[selected_indices_exemplars]
+                    _sub_exemplars = brain_dataset(sub_train_feature_exemplars, sub_train_label_exemplars)
+                    sub_exemplars = torch.utils.data.DataLoader(_sub_exemplars, batch_size=sub_train_feature_exemplars.shape[0], shuffle=False)
+                    MI1_output_data_exemplars, MI1_output_feas_exemplars, MI1_output_logits_exemplars, MI1_output_label_exemplars = eval_model_fea_exemplars_distillation_datafea_logitlabel(model, sub_exemplars, device, trial_pre)
+                     
+                if label == 2.0:
+                    indices = np.where(combined_label_array == label)[0]
+                    selected_indices_exemplars = indices
+                    sub_train_feature_exemplars = combined_feature_array[selected_indices_exemplars]
+                    sub_train_label_exemplars = combined_label_array[selected_indices_exemplars]
+                    _sub_exemplars = brain_dataset(sub_train_feature_exemplars, sub_train_label_exemplars)
+                    sub_exemplars = torch.utils.data.DataLoader(_sub_exemplars, batch_size=sub_train_feature_exemplars.shape[0], shuffle=False)
+                    MI2_output_data_exemplars, MI2_output_feas_exemplars, MI2_output_logits_exemplars, MI2_output_label_exemplars = eval_model_fea_exemplars_distillation_datafea_logitlabel(model, sub_exemplars, device, trial_pre)
+                    
+        # set the instance class for updating 
+        train_label_now_ = np.unique(sub_train_label_batches)
+        train_label_exemplars = train_label_now_%2 + 1  # if label is 1, generate label of 2, else if label is 2, generate label of 1
+            
+        old_data_exmeplars = []
+        old_feas_exemplars = []
+        old_logits_exemplars = []
+        old_labels_exemplars = []
+        new_feas_exemplars = []
+        new_labels_exemplars = []
+
+        if train_label_now_ == 0.0:
+            old_data_exmeplars.append(MI1_output_data_exemplars)
+            old_data_exmeplars.append(MI2_output_data_exemplars)
+            old_feas_exemplars.append(MI1_output_feas_exemplars)
+            old_feas_exemplars.append(MI2_output_feas_exemplars)
+            old_logits_exemplars.append(MI1_output_logits_exemplars)
+            old_logits_exemplars.append(MI2_output_logits_exemplars)
+            old_labels_exemplars.append(MI1_output_label_exemplars)
+            old_labels_exemplars.append(MI2_output_label_exemplars)
+            new_feas_exemplars.append(Rest_output_feas_exemplars)
+            new_labels_exemplars.append(Rest_output_label_exemplars)
+        
+        if train_label_now_ == 1.0:
+            old_data_exmeplars.append(Rest_output_data_exemplars)
+            old_data_exmeplars.append(MI2_output_data_exemplars)
+            old_feas_exemplars.append(Rest_output_feas_exemplars)
+            old_feas_exemplars.append(MI2_output_feas_exemplars)
+            old_logits_exemplars.append(Rest_output_logits_exemplars)
+            old_logits_exemplars.append(MI2_output_logits_exemplars)
+            old_labels_exemplars.append(Rest_output_label_exemplars)
+            old_labels_exemplars.append(MI2_output_label_exemplars)
+            new_feas_exemplars.append(MI1_output_feas_exemplars)
+            new_labels_exemplars.append(MI1_output_label_exemplars)
+        
+        if train_label_now_ == 2.0:
+            old_data_exmeplars.append(Rest_output_data_exemplars)
+            old_data_exmeplars.append(MI1_output_data_exemplars)
+            old_feas_exemplars.append(Rest_output_feas_exemplars)
+            old_feas_exemplars.append(MI1_output_feas_exemplars)
+            old_logits_exemplars.append(Rest_output_logits_exemplars)
+            old_logits_exemplars.append(MI1_output_logits_exemplars)
+            old_labels_exemplars.append(Rest_output_label_exemplars)
+            old_labels_exemplars.append(MI1_output_label_exemplars)
+            new_feas_exemplars.append(MI2_output_feas_exemplars)
+            new_labels_exemplars.append(MI2_output_label_exemplars)
+            
+        # generate the old data loader
+        sub_oldclass_data_distill = np.concatenate(old_data_exmeplars, axis=0)        
+        sub_oldclass_fea_distill = np.concatenate(old_feas_exemplars, axis=0)
+        sub_oldclass_logits_distill = np.concatenate(old_logits_exemplars, axis=0)
+        sub_oldclass_labels = np.concatenate(old_labels_exemplars, axis=0)
+        sub_oldclass_datafea_distill = brain_dataset(sub_oldclass_data_distill, sub_oldclass_fea_distill)
+        sub_oldclass_datalogits_distill = brain_dataset(sub_oldclass_data_distill, sub_oldclass_logits_distill)
+        sub_oldclass_datalabels_distill = brain_dataset(sub_oldclass_data_distill, sub_oldclass_labels)
+        sub_oldclass_datafea_distill_loader = torch.utils.data.DataLoader(sub_oldclass_datafea_distill, batch_size=batch_size, shuffle=True)
+        sub_oldclass_datalogits_distill_loader = torch.utils.data.DataLoader(sub_oldclass_datalogits_distill, batch_size=batch_size, shuffle=True)
+        sub_oldclass_datalabels_distill_loader = torch.utils.data.DataLoader(sub_oldclass_datalabels_distill, batch_size=batch_size, shuffle=True)
+        
+        # generate the new data loader
+        sub_newclass_fea_distill = np.concatenate(new_feas_exemplars, axis=0)
+        sub_newclass_labels_distill = np.concatenate(new_labels_exemplars, axis=0)
+        sub_newclass_fealabel_distill = brain_dataset(sub_newclass_fea_distill, sub_newclass_labels_distill)
+        sub_newclass_fealabel_distill_loader = torch.utils.data.DataLoader(sub_newclass_fealabel_distill, batch_size=batch_size, shuffle=True)
+
         # combine the datasets with the new data
         combined_feature_array = np.concatenate((combined_feature_array, sub_train_feature_batches), axis=0)
         combined_label_array = np.concatenate((combined_label_array, sub_train_label_batches), axis=0)  
         
-        # set the instance class for updating 
-        train_label_now_ = np.unique(sub_train_label_batches)
-        train_label_exemplars = train_label_now_%2 + 1  # if label is 1, generate label of 2, else if label is 2, generate label of 1
-        
-        if (trial_idx+1) % update_wholeModel == 0:
-            # form the training set and the validation set for the self-paced training
-            unique_labels = np.unique(combined_label_array)
-            sub_train_feature_update = []
-            sub_train_label_update = []
-            sub_train_feature_update_val = []
-            sub_train_label_update_val = []
+        # if time for updating, updating the whole model
+        if (trial_idx + 1) % update_wholeModel == 0:
+            # Split the updated training set into source and target sets
+            sub_train_feature_update_source = []
+            sub_train_label_update_source = []
+            sub_train_feature_update_target = []
+            sub_train_label_update_target = []
+            focalloss_alpha = []  # preparing for the focalloss alpha
             if update_wholeModel != 8:
                 _update_wholeModel = 8
             else:
                 _update_wholeModel = update_wholeModel
-            
+
             for label in unique_labels:
-                # form the training and validation set
                 indices = np.where(combined_label_array == label)[0]
+                
                 if label != 0:
-                    val_indices = indices[-int(_update_wholeModel/2)*batch_size_online:]
+                    #print("MI label: ", label)
+                    target_indices = indices[-int(_update_wholeModel/2)*batch_size_online:]
                 else:
-                    val_indices = indices[-int(_update_wholeModel/2)*batch_size_online:]
-
-                train_indices = list(set(indices) - set(val_indices))
-
-                sub_train_feature_update_val.append(combined_feature_array[val_indices])
-                sub_train_label_update_val.append(combined_label_array[val_indices])
-                sub_train_feature_update.append(combined_feature_array[train_indices])
-                sub_train_label_update.append(combined_label_array[train_indices])
+                    #print("Rest label: ", label)
+                    # choose int(_update_wholeModel/2)*batch_size_online samples from the newest data
+                    target_indices = indices[-int(_update_wholeModel/2)*batch_size_online:]
+                    
+                source_indices = list(set(indices) - set(target_indices))
+                
+                sub_train_feature_update_target.append(combined_feature_array[target_indices])
+                sub_train_label_update_target.append(combined_label_array[target_indices])
+                sub_train_feature_update_source.append(combined_feature_array[source_indices])
+                sub_train_label_update_source.append(combined_label_array[source_indices])
+            sub_train_feature_update_source = np.concatenate(sub_train_feature_update_source, axis=0)
+            sub_train_label_update_source = np.concatenate(sub_train_label_update_source, axis=0)
+            sub_train_feature_update_target = np.concatenate(sub_train_feature_update_target, axis=0)
+            sub_train_label_update_target = np.concatenate(sub_train_label_update_target, axis=0)
             
-            sub_train_feature_update = np.concatenate(sub_train_feature_update, axis=0)
-            sub_train_label_update = np.concatenate(sub_train_label_update, axis=0)
-            sub_train_feature_update_val = np.concatenate(sub_train_feature_update_val, axis=0)
-            sub_train_label_update_val = np.concatenate(sub_train_label_update_val, axis=0)
+            # Form the new training sets
+            source_train_set = brain_dataset(sub_train_feature_update_source, sub_train_label_update_source)
+            target_train_set = brain_dataset(sub_train_feature_update_target, sub_train_label_update_target)
+            source_train_loader = torch.utils.data.DataLoader(source_train_set, batch_size=batch_size, shuffle=True)
+            target_train_loader = torch.utils.data.DataLoader(target_train_set, batch_size=batch_size, shuffle=True)
 
-            # form the online validation set and initial training set, the training set will be formed in the training loop later
-            sub_online_train_set = brain_dataset(sub_train_feature_update, sub_train_label_update)
-            sub_online_train_loader = torch.utils.data.DataLoader(sub_online_train_set, batch_size=batch_size, shuffle=True)
-            sub_online_val_set = brain_dataset(sub_train_feature_update_val, sub_train_label_update_val)
-            sub_online_val_loader = torch.utils.data.DataLoader(sub_online_val_set, batch_size=batch_size, shuffle=True)
+
+        # form the new data training set if updat_trial
+        if (trial_idx+1) % update_trial == 0:
+            sub_newdata_data_update = []
+            sub_newdata_label_update = []
+            indices = np.where(combined_label_array == train_label_now_)
+            #selected_indices = indices[0][-update_trial * batch_size_online:]
+            selected_indices = indices[0][-trial_pre:]
+            sub_newdata_data_update.append(combined_feature_array[selected_indices])
+            sub_newdata_label_update.append(combined_label_array[selected_indices])
+            sub_newdata_data_update = np.concatenate(sub_newdata_data_update, axis=0)
+            sub_newdata_label_update = np.concatenate(sub_newdata_label_update, axis=0)
+            sub_newdata_datalabel = brain_dataset(sub_newdata_data_update, sub_newdata_label_update)
+            sub_newdata_datalabel_loader = torch.utils.data.DataLoader(sub_newdata_datalabel, batch_size=batch_size, shuffle=True)
+
+
+        # the loss function
+        criterion = nn.CrossEntropyLoss()
 
         # form the online test set 
         _sub_updating_predict = brain_dataset(sub_train_feature_batches, sub_train_label_batches)
         sub_updating_predict = torch.utils.data.DataLoader(_sub_updating_predict, batch_size=sub_train_feature_batches.shape[0], shuffle=False)
-        
+
         print("********** Online simulation trial: {} ***********".format(trial_idx))
         start_time_infer = time.time()
-        # load the best model
         if (trial_idx+1) > update_trial:
             model.load_state_dict(torch.load(os.path.join(result_save_subject_checkpointdir, 'best_model.pt')))  
-        
+
         model = model.to(device)
         # online testing of the MI class
         ground_truth_label = np.unique(sub_train_label_batches)
         print("ground truth label:{}".format(ground_truth_label))
         predict_accu, class_predictions_array, labels_array, _, _, accuracy_per_class = eval_model_confusion_matrix_fea(model, sub_updating_predict, device)
-        # recording the corresponding accuracy of each class
         accuracies_per_class_iterations.append([ground_truth_label[0], predict_accu/100])
         predict_accuracies.append(predict_accu)
-        #accuracies_per_class.append(accuracy_per_class)
         class_predictions_arrays.extend(class_predictions_array.tolist())
         labels_arrays.extend(labels_array.tolist())
+        accuracies_per_class.append(accuracy_per_class)
         
         stop_time_infer = time.time()
         time_infer = stop_time_infer - start_time_infer
@@ -379,12 +497,7 @@ def Online_updating_EEGLM_simulation(args_dict):
         print("predict accuracy: {}".format(predict_accu))
         print("predict accuracy per class: {}".format(accuracy_per_class))
 
-        if (trial_idx + 1) % (update_trial) == 0: 
-            accuracy_per_class_iter = compute_total_accuracy_per_class(accuracies_per_class_iterations)
-            accuracy_per_class_iters.append(accuracy_per_class_iter)
-            print(accuracy_per_class_iter)
-        
-        if (trial_idx + 1) % update_wholeModel == 0:           
+        if (trial_idx + 1) % update_trial == 0:           
             print("******* Updating the model trial: {} ************".format(trial_idx))
             start_time = time.time()
             experiment_name = 'lr{}_dropout{}'.format(lr, dropout)#experiment name: used for indicating hyper setting
@@ -396,96 +509,124 @@ def Online_updating_EEGLM_simulation(args_dict):
             makedir_if_not_exist(result_save_subjectdir)
             makedir_if_not_exist(result_save_subject_checkpointdir)
 
-            # prepare to train the new model
-            model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
-            model = model.to(device)
+            if (trial_idx + 1) % (update_trial) == 0: 
+                accuracy_per_class_iter = compute_total_accuracy_per_class(accuracies_per_class_iterations)
+                accuracy_per_class_iters.append(accuracy_per_class_iter)
+                print(accuracy_per_class_iter)
+            
+            #training loop
+            # set the best validation accuracy(val_2)
+            if train_label_now_[0] != 0:
+                best_val_accuracy = 0.8 * 100 * accuracy_per_class_iter[int(train_label_now_[0])]
+                best_train_accuracy = 0.8 * 100 * (accuracy_per_class_iter[int(train_label_exemplars[0])] + accuracy_per_class_iter[0]\
+                                                                )/2
+            else:
+                best_val_accuracy = 0.8 * 100 * accuracy_per_class_iter[0]
+                best_train_accuracy = 0.8 * 100 * (accuracy_per_class_iter[1] + accuracy_per_class_iter[2]\
+                                                                )/2
 
-            # Training loop
             is_best = False
-            best_val_accuracy = 0.0
-            best_val_loss = 0.0
+
             epoch_train_loss = []
             epoch_train_accuracy = []
             epoch_validation_accuracy = []
-            initial_A = 0.5
-            delta_A = 0.1
-            lambda_pace = 0.5
-            lambda_pace_new = 0.5
-
+            
             result_save_dict = dict()
 
-            _n_epoch_online = 16
-            initial_train_features = []
-            initial_train_labels = []
+            """
+            if (trial_idx + 1) % 6 == 0:
+                _n_epoch_online = n_epoch_online
+            else:
+                _n_epoch_online = int(2 * np.exp((trial_idx-5)/25))
+            """
             
-            # train the initial model with randomly selected initial_A * N samples for each class from the training set
-            unique_labels_update = np.unique(sub_train_label_update)
-            for label_update in unique_labels_update:
-                indices_update_initial = np.where(sub_train_label_update == label_update)[0]
-                num_samples = int(initial_A * len(indices_update_initial))  # Randomly select samples
-                selected_indices = np.random.choice(indices_update_initial, num_samples, replace=False)
-                initial_train_features.append(sub_train_feature_update[selected_indices])
-                initial_train_labels.append(sub_train_label_update[selected_indices])
-            # Create the initial training dataset
-            initial_train_features = np.concatenate(initial_train_features, axis=0)
-            initial_train_labels = np.concatenate(initial_train_labels, axis=0)
-            sub_online_train_set_initial = brain_dataset(initial_train_features, initial_train_labels)
-            sub_online_train_loader_initial = torch.utils.data.DataLoader(sub_online_train_set_initial, batch_size=batch_size_online, shuffle=True)
-            # train the initial model 
-            # the loss function
-            criterion = nn.CrossEntropyLoss()
+            _n_epoch_online = n_epoch_online
+
+            """
+            criterion = nn.MSELoss()
             optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-            # the intial training 
-            for epoch in trange(_n_epoch_online, desc='online classification update'):
-
-                average_loss_this_epoch = train_one_epoch_fea_selfpace_weights(model, optimizer, criterion, sub_online_train_loader_initial, device, lambda_pace, lambda_pace_new)
-                val_accuracy, _, _ , _, loss_avg_val = eval_model_fea_loss(model, sub_online_val_loader, criterion, device)
-
-                epoch_train_loss.append(average_loss_this_epoch)
-                epoch_validation_accuracy.append(val_accuracy)
+            print("feature updating")
+            for epoch in trange(_n_epoch_online, desc='online feature distillation'):
+                
+                average_loss_this_epoch = train_one_epoch_fea_distillation(model, optimizer, criterion, sub_oldclass_datafea_distill_loader, sub_newclass_fealabel_distill_loader, sub_newdata_datalabel_loader, device, alpha=0.5)
+                #val_accuracy, _, _, _, _, accuracy_per_class = eval_model_confusion_matrix_fea(model, target_train_loader, device)
+                #train_accuracy, _, _ , _ = eval_model_fea(model, target_train_loader, device)
+            """
+            criterion = nn.CrossEntropyLoss()
+            #optimizer = torch.optim.Adam(model.encoder_output.encoder.Encoder_Cls.parameters(), lr=lr)  # only update the cls part
+            optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+            print("cls updating")
             
-
-            # the self-paced training process of the model 
-            _n_epoch_online = 4
             for epoch in trange(_n_epoch_online, desc='online classification update'):
                 
-                initial_A = 0.5
-                delta_A = 0.1
-                lambda_pace = 0.5
-                lambda_pace_new = 0.5
+                #average_loss_this_epoch = train_one_epoch_label_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalabels_distill_loader, device, T=2.0, alpha=alpha_distill)
+                average_loss_this_epoch = train_one_epoch_logitlabel_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalogits_distill_loader, sub_oldclass_datalabels_distill_loader, device, T=2.0, alpha=alpha_distill)
+                #average_loss_this_epoch = train_one_epoch_logit_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalogits_distill_loader, device, T=2, alpha=alpha_distill)
+                val_accuracy, _, _ , _ = eval_model_fea(model, sub_newdata_datalabel_loader, device)
+                #val_accuracy, _, _, _, _, accuracy_per_class = eval_model_confusion_matrix_fea(model, sub_newdata_datalabel_loader, device)
+                train_accuracy, _, _ , _ = eval_model_fea(model, sub_oldclass_datalabels_distill_loader, device)
+                
+                epoch_train_loss.append(average_loss_this_epoch)
+                epoch_train_accuracy.append(train_accuracy)
+                epoch_validation_accuracy.append(val_accuracy)
 
-                while initial_A < 1.0:
+                #update is_best flag, only when the accuracies of two classes of motor imagery are larger than random choice
+                is_best = (val_accuracy >= best_val_accuracy) and (train_accuracy >= best_train_accuracy)
+                #is_best = (train_accuracy >= best_train_accuracy)
+                #is_best = (train_accuracy>=50*(accuracy_per_class_iter[int(train_label_exemplars[0])] + accuracy_per_class_iter[0]\
+                #                                                            )/2) and (val_accuracy>=50*accuracy_per_class_iter[int(train_label_now_[0])])
+                
+                if is_best:
+                    print("best_val_accuracy: {}".format(val_accuracy))
+                    print("best_train_accuracy: {}".format(train_accuracy))
+                    best_val_accuracy = val_accuracy
+                    best_train_accuracy = train_accuracy
+
+                    torch.save(model.state_dict(), os.path.join(result_save_subject_checkpointdir, 'best_model.pt'))
+                    #encoder_to_use.save(os.path.join(result_save_subject_checkpointdir, 'best_model_encoder.pt'))
+                    #encoder_to_use_output.save(os.path.join(result_save_subject_checkpointdir, 'best_model_encoder_output.pt'))
+
+                    result_save_dict['bestepoch_val_accuracy'] = val_accuracy
+                    """for cls_i in range(accuracy_per_class.shape[0]):
+                        result_save_dict['class_accuracy_' + str(cls_i)] = accuracy_per_class[cls_i]"""
+                
+                #if (best_val_accuracy >= 80.0) and (best_train_accuracy >= 80.0):
+                #    break
+
+            # updating the whole model
+            if (trial_idx+1) % update_wholeModel == 0:
+                print("******* Updating the whole model trial: {} ************".format(trial_idx))
+                #criterion = MultiClassFocalLoss(device=device, alpha=[0.1,0.50,0.40])
+                criterion = nn.CrossEntropyLoss()
+                optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+                
+                whole_model_is_best = False
+                whole_model_best_val_accuracy = 0
+                
+                _n_epoch_online = n_epoch_online * 2
+                
+                for epoch in trange(_n_epoch_online, desc='online classification update whole model'):
+                    average_loss_this_epoch = train_one_epoch_fea(model, optimizer, criterion, source_train_loader, device)
+                    whole_model_val_accuracy, _, _, _, _, whole_model_accuracy_per_class = eval_model_confusion_matrix_fea(model, target_train_loader, device)
+                    whole_model_train_accuracy, _, _ , _ = eval_model_fea(model, source_train_loader, device)
                     
-                    initial_A = initial_A + delta_A
-                    lambda_pace = initial_A
-                    lambda_pace_new = 1.0*lambda_pace  # in the initial paper, the lambda was set 1/initial_A, while it is not in accord with the rule of quantiles, so we set lambda as 1*initial_A
-                    if initial_A > 1.0:
-                        break
-
-                    #print("lambda_pace: {}".format(lambda_pace))
-                    criterion = nn.CrossEntropyLoss(reduction='none')
-                    average_loss_this_epoch = train_one_epoch_fea_selfpace_quantiles_rank(model, optimizer, criterion, sub_online_train_loader, device, lambda_pace, lambda_pace_new)
-                    criterion = nn.CrossEntropyLoss()
-                    val_accuracy, _, _ , _, loss_avg_val = eval_model_fea_loss(model, sub_online_val_loader, criterion, device)
-                    train_accuracy, _, _ , _, loss_avg_train = eval_model_fea_loss(model, sub_online_train_loader, criterion, device)
-
                     epoch_train_loss.append(average_loss_this_epoch)
-                    epoch_train_accuracy.append(train_accuracy)
-                    epoch_validation_accuracy.append(val_accuracy)
+                    epoch_train_accuracy.append(whole_model_train_accuracy)
+                    epoch_validation_accuracy.append(whole_model_val_accuracy)
 
-                    #update is_best flag
-                    is_best = val_accuracy >= best_val_accuracy
+                    whole_model_is_best = (whole_model_val_accuracy >= whole_model_best_val_accuracy)
+                    if whole_model_is_best:
+                        print("whole model best_val_accuracy: {}".format(whole_model_val_accuracy))
+                        #print("whole model best_train_accuracy: {}".format(whole_model_train_accuracy))
+                        whole_model_best_val_accuracy = whole_model_val_accuracy
+                        #best_train_accuracy = train_accuracy
 
-                    if is_best:
-                        print("best_val_accuracy: {}".format(val_accuracy))
-                        best_val_accuracy = val_accuracy
                         torch.save(model.state_dict(), os.path.join(result_save_subject_checkpointdir, 'best_model.pt'))
                         #encoder_to_use.save(os.path.join(result_save_subject_checkpointdir, 'best_model_encoder.pt'))
                         #encoder_to_use_output.save(os.path.join(result_save_subject_checkpointdir, 'best_model_encoder_output.pt'))
-                        best_loss = best_val_loss
-                        result_save_dict['bestepoch_val_accuracy'] = val_accuracy
-                
-                
+
+                        result_save_dict['bestepoch_val_accuracy'] = whole_model_val_accuracy
+            
             #save training curve 
             save_training_curves_FixedTrainValSplit('training_curve.png', result_save_subject_trainingcurvedir, epoch_train_loss, epoch_train_accuracy, epoch_validation_accuracy)
 
@@ -540,6 +681,7 @@ if __name__ == "__main__":
     parser.add_argument('--update_trial', default=15, type=int, help="number of trails for instant updating")
     parser.add_argument('--update_wholeModel', default=15, type=int, help="number of trails for longer updating")
     parser.add_argument('--alpha_distill', default=0.5, type=float, help="alpha of the distillation and cls loss func")
+    parser.add_argument('--para_m', default=0.99, type=float, help="hyper parameter for momentum updating")
     parser.add_argument('--best_validation_path', default='lr0.001_dropout0.5', type=str, help="path of the best validation performance model")
     parser.add_argument('--unfreeze_encoder_offline', default=False, type=str2bool, help="whether to unfreeze the encoder params during offline training process")
     parser.add_argument('--unfreeze_encoder_online', default=False, type=str2bool, help="whether to unfreeze the encoder params during online training process")
@@ -619,7 +761,7 @@ if __name__ == "__main__":
     seed_everything(seed)
     if mode == 'offline':
         # 离线训练模型
-        Offline_EEGLM_simulation(args_dict)
+        Offline_EEGNet_simulation(args_dict)
         # 搜索离线训练模型超参数
         experiment_dir = os.path.join(args_dict.Offline_result_save_rootdir, args_dict.sub_name)
         summary_save_dir = os.path.join(experiment_dir, 'hypersearch_summary')
@@ -639,11 +781,11 @@ if __name__ == "__main__":
         
         args_dict.accuracy_per_class_init = best_validation_class_accuracy
         args_dict.restore_file = best_validation_path
-        Online_updating_EEGLM_simulation(args_dict)
+        Online_updating_EEGNet_simulation(args_dict)
     
     if mode == 'hybrid':
         # 离线训练模型
-        Offline_EEGLM_simulation(args_dict)
+        Offline_EEGNet_simulation(args_dict)
         # 搜索离线训练模型超参数
         experiment_dir = os.path.join(args_dict.Offline_result_save_rootdir, args_dict.sub_name)
         summary_save_dir = os.path.join(experiment_dir, 'hypersearch_summary')
@@ -654,16 +796,30 @@ if __name__ == "__main__":
         
         args_dict.accuracy_per_class_init = best_validation_class_accuracy
         args_dict.restore_file = best_validation_path
-        Online_updating_EEGLM_simulation(args_dict)
+        Online_updating_EEGNet_simulation(args_dict)
 
     if mode == 'synthesizing':
         Online_simulation_synthesizing_results_linear(Online_result_save_rootdir=Online_result_save_rootdir)
-        Online_simulation_synthesizing_results_polynomial(Online_result_save_rootdir=Online_result_save_rootdir)
+        #Online_simulation_synthesizing_results_polynomial(Online_result_save_rootdir=Online_result_save_rootdir)
+        Online_simulation_synthesizing_results_polynomial_avg(Online_result_save_rootdir=Online_result_save_rootdir)
         #Online_simulation_synthesizing_results_2cls_linear(Online_result_save_rootdir)
         Online_simulation_synthesizing_results_linear_perclass(Online_result_save_rootdir)
+        Online_simulation_synthesizing_results_polynomial_avgF1(Online_result_save_rootdir, data_session_avg=24*batch_size_online)
+        Online_simulation_synthesizing_results_polynomial_avgF1_noRest(Online_result_save_rootdir, data_session_avg=24*batch_size_online)
+        Online_simulation_synthesizing_results_polynomial_avgF1_Rest(Online_result_save_rootdir, data_session_avg=24*batch_size_online)
+
 
     if mode == 'comparison':
-        methods = ['baseline1_encoder3_noupdate_noRest_val_6', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_11', 'method23_encoder3_val_classval_pretrainlight_unfreeze_inctremental_noRest_fixedepoch_val_6','method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_6_ablation_1']  #'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_6_ablation_1'
+        methods = ['baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new', 'method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new', 'method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new' ,'method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1']
+        methods_perclass = ['method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new','method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new', 'method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new','method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1']
+        
+        #methods = ['baseline1_encoder3_noupdate_noRest_val_6_9batchsize_Rest_mixed_1', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_mixed_ablation_1_3', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_mixed_ablation_2_2', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_2']
+        #methods = ['baseline1_encoder3_noupdate_noRest_val_6_9batchsize_Rest_mixed_1', 'method5_encoder3_pretrainlight_baseline_1_9batchsize_Rest_2_mixed_2','method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_1', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_2']  #'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_6_ablation_1'
+        #methods = ['baseline1_encoder3_noupdate_noRest_val_6_9batchsize_Rest_mixed_1','method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_1']  #'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_6_ablation_1'
+        #methods = ['method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_mixed_ablation_1_4', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_mixed_ablation_3', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_mixed_ablation_2_2', 'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_6_mixed_3']  #'method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_6_ablation_1'
         Online_simulation_synthesizing_results_comparison_linear(Online_result_save_rootdir, methods)
         Online_simulation_synthesizing_results_comparison_polynomial(Online_result_save_rootdir, methods)
+        Online_simulation_synthesizing_results_comparison_polynomial_optimized(Online_result_save_rootdir, methods)
+        Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass(Online_result_save_rootdir, methods_perclass)
         #Online_simulation_synthesizing_results_comparison_linear_2cls(Online_result_save_rootdir, methods)
+    
