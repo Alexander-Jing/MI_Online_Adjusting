@@ -21,7 +21,7 @@ do
     --windows_num 120 \
     --trial_pre 120 \
     --proportion 0.75 \
-    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed3407" \
+    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed3407_noNorm" \
     --Online_folder_path "Online_DataCollected" \
     --Online_result_save_rootdir "Online_simulation_experiments/baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new" \
     --restore_file "None" \
@@ -36,5 +36,6 @@ do
     --unfreeze_encoder_online "True" \
     --alpha_distill  0.60 \
     --update_trial 1 \
+    --preprocess_norm "False"
 
 done

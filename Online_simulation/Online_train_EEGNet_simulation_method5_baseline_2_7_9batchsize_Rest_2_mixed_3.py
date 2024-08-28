@@ -104,8 +104,11 @@ def Offline_EEGLM_simulation(args_dict):
             result_save_dict = dict()
             
             #create model
-            model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
-            
+            if preprocess_norm:
+                model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+            else:
+                model = EEGNetFea(feature_size=29, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+
             # reload weights from restore_file is specified
             if restore_file != 'None':
                 #restore_path = os.path.join(os.path.join(result_save_subject_checkpointdir, restore_file))
@@ -231,7 +234,10 @@ def Online_updating_EEGLM_simulation(args_dict):
     #create model
     #encoder_to_use = ConvEncoder3ResBN(in_features=30, encoder_h=128, enc_width=((3,3),(3,3),(3,3)), enc_downsample=((1,1),(1,1),(1,1)), dropout=dropout)
     #encoder_to_use_output = ConvEncoder_OutputClsFeaTL(in_features=128, output_h=128, width=((3,3),), stride=((1,1),), num_features_for_classification=int(15*64), dropout=dropout)
-    model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+    if preprocess_norm:
+        model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+    else:
+        model = EEGNetFea(feature_size=29, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
 
     experiment_name = 'lr{}_dropout{}'.format(lr, dropout)#experiment name: used for indicating hyper setting
     print(experiment_name)

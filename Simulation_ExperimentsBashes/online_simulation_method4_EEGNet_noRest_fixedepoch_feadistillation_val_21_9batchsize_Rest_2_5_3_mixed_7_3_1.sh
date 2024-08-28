@@ -21,14 +21,14 @@ do
     --windows_num 120 \
     --trial_pre 120 \
     --proportion 0.75 \
-    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed3407" \
+    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed3407_noNorm" \
     --Online_folder_path "Online_DataCollected" \
     --Online_result_save_rootdir "Online_simulation_experiments/method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1" \
     --restore_file "pretrained_weights/checkpoints_test_predict/checkpoints_test_encoder3_light/encoder_epoch_1.0.pt" \
     --n_epoch_offline 16 \
     --n_epoch_online  2 \
     --batch_size 16 \
-    --mode "hybrid" \
+    --mode "online" \
     --batch_size_online 9 \
     --trial_nums 96 \
     --best_validation_path "lr0.01_dropout0.5" \
@@ -38,5 +38,6 @@ do
     --update_trial 1 \
     --update_wholeModel 12 \
     --para_m 0.90 \
-    --cons_rate 1.0
+    --cons_rate 1.0 \
+    --preprocess_norm "False"
 done
