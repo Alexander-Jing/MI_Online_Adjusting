@@ -42,6 +42,7 @@ def Offline_EEGNet_simulation(args_dict):
     trial_pre = args_dict.trial_pre
     Online_folder_path = args_dict.Online_folder_path
     windows_num = args_dict.windows_num
+    preprocess_norm = args_dict.preprocess_norm
     proportion = args_dict.proportion
     Offline_result_save_rootdir = args_dict.Offline_result_save_rootdir
     Online_result_save_rootdir = args_dict.Online_result_save_rootdir
@@ -62,7 +63,7 @@ def Offline_EEGNet_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=40, proportion=proportion)
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=40, preprocess=preprocess_norm, proportion=proportion)
         
     #dataset object
     group_train_set = brain_dataset(sub_train_feature_array, sub_train_label_array)
@@ -183,6 +184,7 @@ def Online_updating_EEGNet_simulation(args_dict):
     trial_pre = args_dict.trial_pre
     Online_folder_path = args_dict.Online_folder_path
     windows_num = args_dict.windows_num
+    preprocess_norm = args_dict.preprocess_norm
     proportion = args_dict.proportion
     Offline_result_save_rootdir = args_dict.Offline_result_save_rootdir
     Online_result_save_rootdir = args_dict.Online_result_save_rootdir
@@ -211,7 +213,7 @@ def Online_updating_EEGNet_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=50, \
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=50, preprocess=preprocess_norm,\
                                                                                                 proportion=proportion, batch_size_online=batch_size_online, \
                                                                                                     pattern=  [1, 2, 1, 2, 0, 0, 2, 2, 1, 1, 0, 0, 
                                                                                                                2, 1, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 
@@ -754,6 +756,7 @@ if __name__ == "__main__":
     parser.add_argument('--Offline_result_save_rootdir', default='./Offline_experiments', help="Directory containing the experiment models")
     parser.add_argument('--restore_file', default='None', help="xxx.statedict")
     parser.add_argument('--proportion', default=0.8, type=float, help='proportion of the training set of the whole dataset')
+    parser.add_argument('--preprocess_norm', default=True, type=str2bool, help="whether to use the BENDR preprocessing")
     parser.add_argument('--n_epoch_offline', default=100, type=int, help="number of epoch")
     parser.add_argument('--n_epoch_online', default=100, type=int, help="number of epoch")
     parser.add_argument('--batch_size', default=64, type=int, help="number of batch size")
@@ -803,6 +806,7 @@ if __name__ == "__main__":
     update_wholeModel = args.update_wholeModel
     para_m = args.para_m
     cons_rate = args.cons_rate
+    preprocess_norm = args.preprocess_norm
 
     # save_folder = './Online_DataCollected' + str(sub_name)
     #sanity check:
@@ -846,6 +850,7 @@ if __name__ == "__main__":
     args_dict.update_wholeModel = update_wholeModel
     args_dict.para_m = para_m
     args_dict.cons_rate = cons_rate
+    args_dict.preprocess_norm = preprocess_norm
 
     seed_everything(seed)
     if mode == 'offline':
