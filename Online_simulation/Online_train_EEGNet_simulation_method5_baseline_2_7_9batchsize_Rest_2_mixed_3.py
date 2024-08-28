@@ -405,7 +405,11 @@ def Online_updating_EEGLM_simulation(args_dict):
             makedir_if_not_exist(result_save_subject_checkpointdir)
 
             # prepare to train the new model
-            model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+            if preprocess_norm:
+                model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+            else:
+                model = EEGNetFea(feature_size=29, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+
             model = model.to(device)
 
             # Training loop

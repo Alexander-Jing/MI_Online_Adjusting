@@ -405,8 +405,11 @@ def Online_updating_EEGNet_simulation(args_dict):
                         makedir_if_not_exist(result_save_subject_resultanalysisdir)
                         makedir_if_not_exist(result_save_subject_trainingcurvedir)
                         #create model
-                        model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
-                        
+                        if preprocess_norm:
+                            model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+                        else:
+                            model = EEGNetFea(feature_size=29, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+
                         restore_file_retrain = os.path.join(os.getcwd(), "pretrained_weights","checkpoints_test_predict","checkpoints_test_encoder3_light","encoder_epoch_1.0.pt")  # when we want to retrain the whole model, we load the basic parameters for the warmaup
                         # reload weights from restore_file is specified
                         if restore_file_retrain != 'None':
