@@ -229,8 +229,11 @@ def Online_updating_EEGNet_simulation(args_dict):
         print("No match found.")
     
     #create model
-    model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
-
+    if preprocess_norm:
+        model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+    else:
+        model = EEGNetFea(feature_size=29, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
+    
     #reload weights from restore_file is specified
     if restore_file != 'None':
         # move the best model from the offline experiments results
