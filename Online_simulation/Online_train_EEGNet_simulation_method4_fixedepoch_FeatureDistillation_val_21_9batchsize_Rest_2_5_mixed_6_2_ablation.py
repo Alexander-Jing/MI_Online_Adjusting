@@ -876,6 +876,7 @@ if __name__ == "__main__":
     args_dict.update_wholeModel = update_wholeModel
     args_dict.para_m = para_m
     args_dict.cons_rate = cons_rate
+    args_dict.preprocess_norm = preprocess_norm
 
     seed_everything(seed)
     if mode == 'offline':
