@@ -425,6 +425,7 @@ def preprocess_eeg_data_Norm(eeg_data, channel_list, target_channel_list, max_sc
             # 归一化数据
             # using the method in: 
             # Kostas D, Aroca-Ouellette S and Rudzicz F (2021) BENDR: Using Transformers and a Contrastive Self-Supervised Learning Task to Learn From Massive Amounts of EEG Data. Front. Hum. Neurosci. 15:653659. doi: 10.3389/fnhum.2021.653659
+            # code referring to https://github.com/SPOClab-ca/BENDR and https://github.com/SPOClab-ca/dn3
             xmin = _eeg_data.min()
             xmax = _eeg_data.max()
             eeg_data_max.append(xmax)
