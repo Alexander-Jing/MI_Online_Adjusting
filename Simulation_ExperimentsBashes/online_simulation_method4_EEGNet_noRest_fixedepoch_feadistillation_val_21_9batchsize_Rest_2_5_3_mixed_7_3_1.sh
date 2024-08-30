@@ -28,7 +28,7 @@ do
     --n_epoch_offline 16 \
     --n_epoch_online  2 \
     --batch_size 16 \
-    --mode "online" \
+    --mode "hybrid" \
     --batch_size_online 9 \
     --trial_nums 96 \
     --best_validation_path "lr0.01_dropout0.5" \
