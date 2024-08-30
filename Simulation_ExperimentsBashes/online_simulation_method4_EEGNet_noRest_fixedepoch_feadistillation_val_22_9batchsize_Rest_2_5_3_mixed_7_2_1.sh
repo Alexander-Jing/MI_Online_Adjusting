@@ -14,14 +14,14 @@ for i in $(seq 1 25)
 do
   sub_name=$(printf "%03d" $i)
   python3 $program_path \
-    --seed 3407 \
+    --seed 126 \
     --gpu_idx 0 \
     --sub_name $sub_name \
     --Offline_folder_path "/home/jyt/workspace/transfer_models/datasets_MI/hand_elbow/derivatives" \
     --windows_num 120 \
     --trial_pre 120 \
     --proportion 0.75 \
-    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed3407_noNorm" \
+    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed126" \
     --Online_folder_path "Online_DataCollected" \
     --Online_result_save_rootdir "Online_simulation_experiments/method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1" \
     --restore_file "pretrained_weights/checkpoints_test_predict/checkpoints_test_encoder3_light/encoder_epoch_1.0.pt" \
@@ -39,5 +39,5 @@ do
     --update_wholeModel 12 \
     --para_m 0.90 \
     --cons_rate 1.0 \
-    --preprocess_norm "False"
+    --preprocess_norm "True"
 done
