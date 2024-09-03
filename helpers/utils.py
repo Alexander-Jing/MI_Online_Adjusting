@@ -758,6 +758,72 @@ def train_one_epoch_fea_MMD_targetcls_iter(model, optimizer, criterion, source_l
     average_loss_this_epoch = loss_avg()
     return average_loss_this_epoch
 
+def train_one_epoch_fea_MMDContrastive_targetcls_iter_t(model, optimizer, criterion, source_loader, target_loader, memoryBank_source, memoryBank_target, device, cons_beta=0.01, t=1.0):
+    # based on the contrastive learning based method in:
+    # D. Zhang, H. Li and J. Xie, Unsupervised and semi-supervised domain adaptation networks considering both global knowledge and prototype-based local class information for Motor Imagery Classification. Neural Networks (2024), doi: https://doi.org/10.1016/j.neunet.2024.106497. 
+    
+    model.train()
+    # Convert memoryBank_source to torch tensor and move to device
+    memoryBank_source = torch.from_numpy(memoryBank_source).to(device)
+    memoryBank_target = torch.from_numpy(memoryBank_target).to(device)
+
+    # considering that data in the source is much larger than that in target, so we use itertools for target data expansion 
+    target_loader = itertools.cycle(target_loader)
+
+    loss_avg = RunningAverage()
+    for i, ((source_data, source_labels), (target_data, target_labels)) in enumerate(zip(source_loader, target_loader)):
+        # check target_data size
+        if len(target_data) != len(source_data):
+            _batch_size = min(len(target_data), len(source_data))
+            source_data = source_data[0:_batch_size,:,:]
+            source_labels = source_labels[0:_batch_size]
+            target_data = target_data[0:_batch_size,:,:]
+            target_labels = target_labels[0:_batch_size]
+        
+        source_data = source_data.to(device)
+        source_labels = source_labels.to(device)
+        target_data = target_data.to(device)
+        target_labels = target_labels.to(device)
+
+        # Forward pass
+        source_output, source_features = model(source_data)
+        target_output, target_features = model(target_data)
+
+        # Calculate classification loss
+        #cls_loss = criterion(source_output, source_labels)
+        
+        cls_loss = criterion(source_output, source_labels) + criterion(target_output, target_labels)
+
+        # Calculate MMD loss
+        mmd_loss = mmd_loss_func(source_features, target_features)
+
+        # calculate the Source contrastive loss
+        _source_innerdot = torch.einsum('bct,nct->bn', source_features, memoryBank_source)/t  # t is the temperature parameter
+        source_cons_loss = criterion(_source_innerdot, source_labels)
+        # calculate the Interactive contrastive loss for the Target
+        _target_innerdot = torch.einsum('bct,nct->bn', target_features, memoryBank_source)/t 
+        target_cons_loss = criterion(_target_innerdot, target_labels)
+
+        # Total loss is the sum of classification loss and MMD loss
+        #loss = cls_loss + mmd_loss + source_cons_loss + target_cons_loss
+        loss_transfer = mmd_loss + source_cons_loss + target_cons_loss
+        loss = cls_loss + cons_beta * loss_transfer
+
+        # Update running average of the loss
+        loss_avg.update(loss.item())
+
+        # Clear previous gradients
+        optimizer.zero_grad()
+
+        # Calculate gradient
+        loss.backward()
+
+        # Perform parameters update
+        optimizer.step()
+    
+    average_loss_this_epoch = loss_avg()
+    return average_loss_this_epoch
+
 def train_one_epoch_fea_MMDContrastive_targetcls_iter_1(model, optimizer, criterioncls, criterioncons, source_loader, target_loader, memoryBank_source, memoryBank_target, device, cons_beta=0.01):
     # based on the contrastive learning based method in:
     # D. Zhang, H. Li and J. Xie, Unsupervised and semi-supervised domain adaptation networks considering both global knowledge and prototype-based local class information for Motor Imagery Classification. Neural Networks (2024), doi: https://doi.org/10.1016/j.neunet.2024.106497. 
