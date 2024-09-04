@@ -52,7 +52,7 @@
             "args": [
                 "--seed", "42",
                 "--gpu_idx", "0",
-                "--sub_name", "003",
+                "--sub_name", "004",
                 "--Offline_folder_path", "/home/jyt/workspace/transfer_models/datasets_MI/hand_elbow/derivatives",
                 "--windows_num", "120",
                 "--trial_pre", "120",

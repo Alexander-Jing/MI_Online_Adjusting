@@ -625,6 +625,9 @@ def Online_updating_EEGNet_simulation(args_dict):
                 
                 _n_epoch_online = n_epoch_online * 2
                 
+                # load the new saved best model (add for test)
+                model.load_state_dict(torch.load(os.path.join(result_save_subject_checkpointdir, 'best_model.pt')))  
+                model = model.to(device)
                 
                 for epoch in trange(_n_epoch_online, desc='online classification update whole model'):
                     # initially calculate the memory bank for source and target data in each epoch 
