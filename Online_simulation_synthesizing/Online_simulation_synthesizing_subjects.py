@@ -1306,7 +1306,8 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_19_9batchsize_Rest_2_2_1_mixed_4_new'\
                         or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_2_mixed_4_new_distilmodified'\
                             or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2'\
-                                or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1':
+                                or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1'\
+                                    or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_23_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1':
         return "Ours (incremental)",'#9273B2'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new':
         return "Model retraining",'#3852A4'
