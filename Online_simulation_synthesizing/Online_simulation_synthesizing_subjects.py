@@ -1207,7 +1207,9 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Onlin
         method_name, method_color = name_change(method)
         # 绘制均值折线图
         if method_name == retrain_method:
-            sns.lineplot(data=means_smooth['Mean'], label=f'{method_name}', linewidth=2, linestyle='--', color=method_color)
+            # sns.lineplot(data=means_smooth['Mean'], label=f'{method_name}', linewidth=2, linestyle='--', color=method_color)
+            sns.lineplot(data=means_smooth['Mean'], label=f'{method_name}', linewidth=4, color=method_color)
+        
         else:
             means_sm = means_smooth['Mean']
             sns.lineplot(data=means_smooth['Mean'], label=f'{method_name}', linewidth=4, color=method_color)
@@ -1224,7 +1226,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Onlin
     plt.ylim(bottom=lower, top=upper)
     
     # 设置x轴的范围为0到96
-    plt.xlim(left=0, right=95)
+    plt.xlim(left=12, right=95)
     # 设置刻度的字体
     # 获取当前的坐标轴
     ax = plt.gca()
@@ -1260,13 +1262,17 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
         ):
     if method=='baseline1_encoder3_noupdate_noRest_val_6_9batchsize_Rest_mixed_2' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_150' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_1' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_2' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_3' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_4':
         return 'No updating','#386fb7'
-    if method=='method5_encoder3_pretrainlight_baseline_1_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new':
+    if method=='method5_encoder3_pretrainlight_baseline_1_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_1_1_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_3' or method=='method5_EEGNet_baseline_1_3_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4':
         return "Lin's",'#E0802A'
-    if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new':
+    if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_1':
         return "Wang's",'#3b9144'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_4':
         return  r'$L_{ce}+L_{kdr}+L_{focal}$', '#AF5A76'
         #return  'Lce+Lkdr+Lfocal', '#AF5A76'
+    if method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation3':
+        return "Ablation 3",'#E0802A'
+    if method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation2':
+        return "Ablation 2",'#3b9144'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_4' \
         or method=='method4_encoder3_pretrainlight_fixedepoch_Distillation_val_15_9batchsize_Rest_2_lessepoch_mixed' \
             or method=='method4_encoder3_pretrainlight_fixedepoch_Distillation_val_15_9batchsize_Rest_2_lessepoch_1_mixed' \
@@ -1369,7 +1375,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
 
         # 设置y轴的最小值为random_acc
         if method_name=="Lin's" or method_name=="Wang's":    
-            axs[i//3, i%3].set_ylim(bottom=20, top=60)
+            axs[i//3, i%3].set_ylim(bottom=lower, top=upper)
         else:
             axs[i//3, i%3].set_ylim(bottom=lower, top=upper)
     

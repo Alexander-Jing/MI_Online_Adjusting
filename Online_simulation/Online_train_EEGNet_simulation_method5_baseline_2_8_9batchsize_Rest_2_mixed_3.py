@@ -199,6 +199,7 @@ def Online_updating_EEGLM_simulation(args_dict):
     update_trial = args_dict.update_trial
     alpha_distill = args_dict.alpha_distill
     update_wholeModel = args_dict.update_wholeModel
+    A_init = args_dict.A_init
 
     #GPU setting
     cuda = torch.cuda.is_available()
@@ -419,7 +420,7 @@ def Online_updating_EEGLM_simulation(args_dict):
             epoch_train_loss = []
             epoch_train_accuracy = []
             epoch_validation_accuracy = []
-            initial_A = 0.5
+            initial_A = A_init
             delta_A = 0.1
             lambda_pace = initial_A
             lambda_pace_new = initial_A
@@ -452,7 +453,8 @@ def Online_updating_EEGLM_simulation(args_dict):
             # the intial training 
             for epoch in trange(_n_epoch_online, desc='online classification update'):
 
-                average_loss_this_epoch = train_one_epoch_fea_selfpace_weights(model, optimizer, criterion, sub_online_train_loader_initial, device, lambda_pace, lambda_pace_new)
+                #average_loss_this_epoch = train_one_epoch_fea_selfpace_weights(model, optimizer, criterion, sub_online_train_loader_initial, device, lambda_pace, lambda_pace_new)
+                average_loss_this_epoch = train_one_epoch_fea(model, optimizer, criterion, sub_online_train_loader_initial, device)
                 val_accuracy, _, _ , _, loss_avg_val = eval_model_fea_loss(model, sub_online_val_loader, criterion, device)
 
                 epoch_train_loss.append(average_loss_this_epoch)
@@ -463,7 +465,7 @@ def Online_updating_EEGLM_simulation(args_dict):
             _n_epoch_online = 4
             for epoch in trange(_n_epoch_online, desc='online classification update'):
                 
-                initial_A = 0.5
+                initial_A = A_init
                 delta_A = 0.1
                 lambda_pace = initial_A
                 lambda_pace_new = initial_A
@@ -557,6 +559,7 @@ if __name__ == "__main__":
     parser.add_argument('--update_trial', default=15, type=int, help="number of trails for instant updating")
     parser.add_argument('--update_wholeModel', default=15, type=int, help="number of trails for longer updating")
     parser.add_argument('--alpha_distill', default=0.5, type=float, help="alpha of the distillation and cls loss func")
+    parser.add_argument('--A_init', default=0.5, type=float, help="initial setting of self-paced learning parameter A")
     parser.add_argument('--best_validation_path', default='lr0.001_dropout0.5', type=str, help="path of the best validation performance model")
     parser.add_argument('--unfreeze_encoder_offline', default=False, type=str2bool, help="whether to unfreeze the encoder params during offline training process")
     parser.add_argument('--unfreeze_encoder_online', default=False, type=str2bool, help="whether to unfreeze the encoder params during online training process")
@@ -592,6 +595,7 @@ if __name__ == "__main__":
     alpha_distill = args.alpha_distill
     update_wholeModel = args.update_wholeModel
     preprocess_norm = args.preprocess_norm
+    A_init = args.A_init
 
     # save_folder = './Online_DataCollected' + str(sub_name)
     #sanity check:
@@ -634,6 +638,7 @@ if __name__ == "__main__":
     args_dict.alpha_distill = alpha_distill
     args_dict.update_wholeModel = update_wholeModel
     args_dict.preprocess_norm = preprocess_norm
+    args_dict.A_init = A_init
 
     seed_everything(seed)
     if mode == 'offline':
