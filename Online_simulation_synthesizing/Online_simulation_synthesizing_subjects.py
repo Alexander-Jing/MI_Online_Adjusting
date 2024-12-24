@@ -1226,7 +1226,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Onlin
     plt.ylim(bottom=lower, top=upper)
     
     # 设置x轴的范围为0到96
-    plt.xlim(left=12, right=95)
+    plt.xlim(left=0, right=95)
     # 设置刻度的字体
     # 获取当前的坐标轴
     ax = plt.gca()

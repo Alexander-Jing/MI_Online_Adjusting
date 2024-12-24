@@ -204,6 +204,7 @@ def Online_updating_EEGNet_simulation(args_dict):
     update_wholeModel = args_dict.update_wholeModel
     para_m = args_dict.para_m
     cons_rate = args_dict.cons_rate
+    val_exemplar = args_dict.val_exemplar
 
     #GPU setting
     cuda = torch.cuda.is_available()
@@ -225,11 +226,7 @@ def Online_updating_EEGNet_simulation(args_dict):
                                                                                                                1, 1, 1, 2, 0, 0, 2, 2, 1, 2, 0, 0, 
                                                                                                                2, 1, 1, 2, 0, 0, 2, 1, 1, 2, 0, 0, 
                                                                                                                1, 2, 2, 2, 0, 0, 2, 1, 1, 1, 0, 0, 
-                                                                                                               2, 2, 1, 1, 0, 0, 1, 2, 2, 1, 0, 0])
-    _, _, _, _, \
-        sub_train_feature_array_1_rest, sub_train_label_array_1_rest = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=50, preprocess=preprocess_norm,\
-                                                                                                proportion=proportion, batch_size_online=batch_size_online, \
-                                                                                                    pattern=[0,0,0,0])
+                                                                                                               2, 2, 1, 1, 0, 0, 1, 2, 2, 1, 0, 0])    
      
     match = re.search(r"lr(\d+\.\d+)_dropout(\d+\.\d+)", restore_file)
     if match:
@@ -298,7 +295,7 @@ def Online_updating_EEGNet_simulation(args_dict):
     class_predictions_arrays = []
     labels_arrays = []
 
-    accuracies_per_class = []
+    # accuracies_per_class = []
     accuracy_per_class_iters = []
 
     _n_epoch_online = n_epoch_online
@@ -307,7 +304,7 @@ def Online_updating_EEGNet_simulation(args_dict):
     accuracies_per_class_iterations.append([1, 0])
     accuracies_per_class_iterations.append([2, 0])
     accuracies_per_class_iterations_Rest = []
-    accuracies_per_class_iterations_Rest.append([0, accuracy_per_class_init[0]])
+    accuracies_per_class_iterations_Rest.append([0, accuracy_per_class_init[0]])  # saving the existing initial caliberation accuracy for class 0
     
     #best_val_accuracy = 40.0
     #best_train_accuracy = 40.0
@@ -316,10 +313,6 @@ def Online_updating_EEGNet_simulation(args_dict):
         # generate the new data, simulating the online experiment 
         sub_train_feature_batches = sub_train_feature_array_1[trial_idx * batch_size_online : (trial_idx + 1) * batch_size_online, :, :]
         sub_train_label_batches = sub_train_label_array_1[trial_idx * batch_size_online : (trial_idx + 1) * batch_size_online]
-
-        # generate the rest data, for the online performance evaluation of the rest data 
-        sub_train_feature_batches_rest = sub_train_feature_array_1_rest[trial_idx * batch_size_online : (trial_idx + 1) * batch_size_online, :, :]
-        sub_train_label_batches_rest = sub_train_label_array_1_rest[trial_idx * batch_size_online : (trial_idx + 1) * batch_size_online]
 
         # when the model begin to update in the new task, try to save the output of the old model for the old tasks so that the distillation method can be used 
         if (trial_idx + 1) % update_wholeModel == 1:
@@ -498,10 +491,6 @@ def Online_updating_EEGNet_simulation(args_dict):
         # form the online test set 
         _sub_updating_predict = brain_dataset(sub_train_feature_batches, sub_train_label_batches)
         sub_updating_predict = torch.utils.data.DataLoader(_sub_updating_predict, batch_size=sub_train_feature_batches.shape[0], shuffle=False)
-        # form the rest data test set
-        _sub_updating_predict_rest = brain_dataset(sub_train_feature_batches_rest, sub_train_label_batches_rest)
-        sub_updating_predict_rest = torch.utils.data.DataLoader(_sub_updating_predict_rest, batch_size=sub_train_feature_batches.shape[0], shuffle=False)
-        
 
         print("********** Online simulation trial: {} ***********".format(trial_idx))
         start_time_infer = time.time()
@@ -513,16 +502,14 @@ def Online_updating_EEGNet_simulation(args_dict):
         ground_truth_label = np.unique(sub_train_label_batches)
         print("ground truth label:{}".format(ground_truth_label))
         predict_accu, class_predictions_array, labels_array, _, _, accuracy_per_class = eval_model_confusion_matrix_fea(model, sub_updating_predict, device)
-        if ground_truth_label[0] != 0.0:
-            accuracies_per_class_iterations.append([ground_truth_label[0], predict_accu/100])
-            predict_accuracies.append(predict_accu)
-            class_predictions_arrays.extend(class_predictions_array.tolist())
-            labels_arrays.extend(labels_array.tolist())
-            accuracies_per_class.append(accuracy_per_class)
-        else:
-            predict_accuracies.append(predict_accu)
-            class_predictions_arrays.extend(class_predictions_array.tolist())
-            labels_arrays.extend(labels_array.tolist())
+        # recording the corresponding accuracy of each class
+        accuracies_per_class_iterations.append([ground_truth_label[0], predict_accu/100])
+        predict_accuracies.append(predict_accu)
+        class_predictions_arrays.extend(class_predictions_array.tolist())
+        labels_arrays.extend(labels_array.tolist())
+        #accuracies_per_class.append(accuracy_per_class)
+        # specially recording the corresponding accuracy of class 0 for further validation 
+        if ground_truth_label[0] == 0.0:
             accuracies_per_class_iterations_Rest.append([ground_truth_label[0], predict_accu/100])
         
         stop_time_infer = time.time()
@@ -531,10 +518,6 @@ def Online_updating_EEGNet_simulation(args_dict):
 
         print("predict accuracy: {}".format(predict_accu))
         print("predict accuracy per class: {}".format(accuracy_per_class))
-        # online testing of the rest class
-        if (trial_idx) < 80:
-            predict_accu, _, _, _, _, accuracy_per_class = eval_model_confusion_matrix_fea(model, sub_updating_predict_rest, device)
-            accuracies_per_class_iterations.append([0, predict_accu/100])
 
         if (trial_idx + 1) % update_trial == 0:           
             print("******* Updating the model trial: {} ************".format(trial_idx))
@@ -555,7 +538,7 @@ def Online_updating_EEGNet_simulation(args_dict):
                 accuracy_per_class_iter_Rest = compute_total_accuracy_per_class(accuracies_per_class_iterations_Rest)
             
             #training loop
-            # set the best validation accuracy(val_2)
+            # set the best validation accuracy
             if train_label_now_[0] != 0:
                 best_val_accuracy = 0.8 * 100 * accuracy_per_class_iter[int(train_label_now_[0])]
                 best_train_accuracy = 0.8 * 100 * (accuracy_per_class_iter[int(train_label_exemplars[0])] + accuracy_per_class_iter_Rest[0]\
@@ -572,14 +555,7 @@ def Online_updating_EEGNet_simulation(args_dict):
             epoch_validation_accuracy = []
             
             result_save_dict = dict()
-
-            """
-            if (trial_idx + 1) % 6 == 0:
-                _n_epoch_online = n_epoch_online
-            else:
-                _n_epoch_online = int(2 * np.exp((trial_idx-5)/25))
-            """
-            
+   
             _n_epoch_online = n_epoch_online
 
             criterion = nn.CrossEntropyLoss()
@@ -604,7 +580,11 @@ def Online_updating_EEGNet_simulation(args_dict):
                 epoch_validation_accuracy.append(val_accuracy)
 
                 #update is_best flag, only when the accuracies of two classes of motor imagery are larger than random choice
-                is_best = (val_accuracy >= best_val_accuracy) and (train_accuracy >= best_train_accuracy)
+                if val_exemplar:
+                    is_best = (val_accuracy >= best_val_accuracy) and (train_accuracy >= best_train_accuracy)
+                else:
+                    is_best = (val_accuracy >= best_val_accuracy)
+
                 #is_best = (train_accuracy >= best_train_accuracy)
                 #is_best = (train_accuracy>=50*(accuracy_per_class_iter[int(train_label_exemplars[0])] + accuracy_per_class_iter[0]\
                 #                                                            )/2) and (val_accuracy>=50*accuracy_per_class_iter[int(train_label_now_[0])])
@@ -801,8 +781,9 @@ if __name__ == "__main__":
     parser.add_argument('--update_wholeModel', default=15, type=int, help="number of trails for longer updating")
     parser.add_argument('--alpha_distill', default=0.5, type=float, help="alpha of the distillation and cls loss func")
     parser.add_argument('--para_m', default=0.99, type=float, help="hyper parameter for momentum updating")
-    parser.add_argument('--cons_rate', default=0.01, type=float, help="hyper parameter for constractiv loss")
+    parser.add_argument('--cons_rate', default=0.01, type=float, help="hyper parameter for constractive loss")
     parser.add_argument('--best_validation_path', default='lr0.001_dropout0.5', type=str, help="path of the best validation performance model")
+    parser.add_argument('--val_exemplar', default=True, type=str2bool, help="whether to close the validation of exemplar set")
     parser.add_argument('--unfreeze_encoder_offline', default=False, type=str2bool, help="whether to unfreeze the encoder params during offline training process")
     parser.add_argument('--unfreeze_encoder_online', default=False, type=str2bool, help="whether to unfreeze the encoder params during online training process")
 
@@ -839,6 +820,7 @@ if __name__ == "__main__":
     para_m = args.para_m
     cons_rate = args.cons_rate
     preprocess_norm = args.preprocess_norm
+    val_exemplar = args.val_exemplar
 
     # save_folder = './Online_DataCollected' + str(sub_name)
     #sanity check:
@@ -883,6 +865,7 @@ if __name__ == "__main__":
     args_dict.para_m = para_m
     args_dict.cons_rate = cons_rate
     args_dict.preprocess_norm = preprocess_norm
+    args_dict.val_exemplar = val_exemplar
 
     seed_everything(seed)
     if mode == 'offline':
