@@ -26,7 +26,7 @@ from helpers.utils import Offline_write_performance_info_FixedTrainValSplit_Conf
 from Offline_synthesizing_results.synthesize_hypersearch_for_a_subject import synthesize_hypersearch_confusionMatrix
 from Online_simulation_synthesizing.Online_simulation_synthesizing_subjects import Online_simulation_synthesizing_results_linear, Online_simulation_synthesizing_results_comparison_linear, Online_simulation_synthesizing_results_linear_perclass,\
     Online_simulation_synthesizing_results_comparison_polynomial, Online_simulation_synthesizing_results_comparison_polynomial_optimized, Online_simulation_synthesizing_results_polynomial_avg, Online_simulation_synthesizing_results_polynomial_avgF1, \
-    Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass, Online_simulation_synthesizing_results_polynomial_avgF1_noRest, Online_simulation_synthesizing_results_polynomial_avgF1_Rest
+    Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass, Online_simulation_synthesizing_results_polynomial_avgF1_noRest, Online_simulation_synthesizing_results_polynomial_avgF1_Rest, Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass_ablation
 
 
 #for personal model, save the test prediction of each cv fold
@@ -823,3 +823,9 @@ if __name__ == "__main__":
         Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass(Online_result_save_rootdir, methods_perclass)
         #Online_simulation_synthesizing_results_comparison_linear_2cls(Online_result_save_rootdir, methods)
     
+    if mode == "ablation":
+        methods = []
+        methods_perclass = ['method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation3_m0_3407', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation2_m0.9_3407', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1']
+
+        Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass_ablation(Online_result_save_rootdir, methods_perclass)
+        

@@ -1334,9 +1334,13 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_mixed_ablation_5_1':
         return r'$L_{ce}$', '#AF5A76'
         #return 'Lce', '#AF5A76'
+    if method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation3_m0_3407':
+        return "Ablation 3", '#AF5A76'
+    if method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation2_m0.9_3407':
+        return "Ablation 2", '#AF5A76'
     
-    
-
+# 设置seaborn样式
+sns.set_theme(style="darkgrid")
 
 def Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=30.0, upper=60.0, \
                                                                                     retrain_method='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1', \
@@ -1419,9 +1423,10 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
     plt.savefig(f'{Online_result_save_rootdir}/{img_name}.pdf')
     plt.close()  
 
+
 def Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass_ablation(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=30.0, upper=60.0, \
                                                                                     retrain_method='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1', \
-                                                                                        row=1, col=3, img_name='synthesizing_results_subjects_comparison_polynomial_optimized_perclass'):
+                                                                                        row=1, col=3, img_name='synthesizing_results_subjects_comparison_polynomial_optimized_perclass_ablation'):
     
     matplotlib.rcParams["font.family"] = "Times New Roman"
     # 设置图形大小
@@ -1429,7 +1434,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
 
     # 设置seaborn样式
     sns.set_theme()
-    
+
     class_colors = ['#386fb7', '#3b9144', '#E0802A']
     # 遍历所有的方法
     for i, method in enumerate(methods):
@@ -1455,8 +1460,8 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         font_prop = fm.FontProperties(family='Times New Roman', size=16)
 
         # 设置y轴的最小值为random_acc
-        if method_name==r'$L_{ce}$' or method_name=="Wang's":    
-            axs[i%3].set_ylim(bottom=10, top=45)
+        if method_name==r'$L_{ce}$' or method_name=="Ablation 3":    
+            axs[i%3].set_ylim(bottom=20, top=50)
         else:
             axs[i%3].set_ylim(bottom=lower, top=upper)
     
