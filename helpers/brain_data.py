@@ -25,6 +25,25 @@ class brain_dataset(Dataset):
     
     def __get_instance_list__(self):
         return np.array(self.instance_list).shape
+
+# dataset with weights for samplesimport numpy as np
+class brain_dataset_weight(Dataset):
+    def __init__(self, instance_list, label_list, weights):
+        self.instance_list = instance_list
+        self.instance_label = label_list
+        self.instance_weights = weights
+
+    def __getitem__(self, index):
+        return self.instance_list[index], self.instance_label[index], self.instance_weights[index]
+    
+    def __len__(self):
+        return len(self.instance_list)
+    
+    def __get_instance_label__(self):
+        return self.instance_label
+    
+    def __get_instance_list__(self):
+        return np.array(self.instance_list).shape
     
 def read_subject_csv(path, select_feature_columns = ['AB_I_O', 'AB_PHI_O', 'AB_I_DO', 'AB_PHI_DO', 'CD_I_O', 'CD_PHI_O',
        'CD_I_DO', 'CD_PHI_DO'], num_chunk_this_window_size = 2224, verbose=False):

@@ -364,6 +364,47 @@ def train_one_epoch_fea(model, optimizer, criterion, train_loader, device):
     average_loss_this_epoch = loss_avg()
     return average_loss_this_epoch
 
+def train_one_epoch_fea_weighted(model, optimizer, criterion, train_loader, device):
+    
+    # this is the weighted training, the loader should use ultils.brain_dataset_weight
+    # paper: Wang H, Qi Y, Yao L, et al. A Human–Machine Joint Learning Framework to Boost Endogenous BCI Training[J]. IEEE Transactions on Neural Networks and Learning Systems, 2023. DOI: 10.1109/TNNLS.2023.3305621
+    # using the method for the simulation experiment
+    # referring to https://github.com/twotwobrother/Joint-learning-DEMO/blob/main/SPCSPcell.m, which is a demo of the joint learning, we are not sure whether it is an official implementation
+
+    model.train()
+    
+    loss_avg = RunningAverage()
+    for i, (data_batch, labels_batch, weights_batch) in enumerate(train_loader):
+        # Move inputs and labels to device
+        data_batch = data_batch.to(device)
+        labels_batch = labels_batch.to(device)
+        weights_batch = weights_batch.to(device)
+        
+        # Forward pass
+        output_batch, _ = model(data_batch)
+        
+        # Calculate loss
+        loss = criterion(output_batch, labels_batch)
+        
+        # Apply weights to the loss
+        weighted_loss = loss * weights_batch
+        weighted_loss = weighted_loss.mean()  # Mean to reduce the scalar
+        
+        # Update running average of the loss
+        loss_avg.update(weighted_loss.item())
+        
+        # Clear previous gradients
+        optimizer.zero_grad()
+
+        # Calculate gradient
+        weighted_loss.backward()
+
+        # Perform parameters update
+        optimizer.step()
+    
+    average_loss_this_epoch = loss_avg()
+    return average_loss_this_epoch
+
 
 def train_one_epoch_fea_MMDContrastive(model, optimizer, criterion, source_loader, target_loader, memoryBank_source, memoryBank_target, device, cons_beta=0.01):
     # referring the contrastive learning based method in:
@@ -1927,198 +1968,6 @@ def data_transform(data_batch):
     
     return x
 
-def train_one_epoch_fNIRS_T(model, optimizer, criterion, train_loader, device, epoch):
-    # this func is used for the training of fNIRS-T model with label-smoothing and flooding trick 
-    flooding_level = [0.40, 0.38, 0.35]
-    
-    model.train()
-    loss_avg = RunningAverage()
-    for i, (data_batch, labels_batch) in enumerate(train_loader):
-#         print('Inside train_one_epoch, size of data_batch is {}'.format(data_batch.shape))
-        #inputs: tensor on cpu, torch.Size([batch_size, sequence_length, num_features]) in the 30s, sequence _length=150， num_features=8
-        #labels: tensor on cpu, torch.Size([batch_size])
-        
-        data_batch = data_transform(data_batch)  # transform the data form to the input of fNIRS-preT
-        #  input shape of fNIRS-preT is [B, 2, fNIRS channels, sampling points]
-
-        data_batch = data_batch.to(device) #put inputs to device
-        labels_batch = labels_batch.to(device) #when performing training, need to also put labels to device to do loss calculation and backpropagation
-
-        #forward pass
-        #outputs: tensor on gpu, requires grad, torch.Size([batch_size, num_classes])
-        output_batch = model(data_batch)
-        
-        #calculate loss
-        #loss: tensor (scalar) on gpu, torch.Size([])
-        loss = criterion(output_batch, labels_batch)
-        
-        # Piecewise decay flooding. b is flooding level, b = 0 means no flooding
-        if epoch < 30:
-            b = flooding_level[0]
-        elif epoch < 50:
-            b = flooding_level[1]
-        else:
-            b = flooding_level[2]
-        
-        # flooding
-        loss = (loss - b).abs() + b
-
-        #update running average of the loss
-        loss_avg.update(loss.item())
-        
-        #clear previous gradients
-        optimizer.zero_grad()
-
-        #calculate gradient
-        loss.backward()
-        #perform parameters update
-        optimizer.step()
-    
-    average_loss_this_epoch = loss_avg()
-    return average_loss_this_epoch
-
-def train_one_epoch_Ours_T(model, optimizer, criterion, train_loader, device, epoch, flooding_level = [0.40, 0.38, 0.35]):
-    # this func is used for the training of fNIRS-T model with label-smoothing and flooding trick 
-    
-    model.train()
-    loss_avg = RunningAverage()
-    for i, (data_batch, labels_batch) in enumerate(train_loader):
-#         print('Inside train_one_epoch, size of data_batch is {}'.format(data_batch.shape))
-        #inputs: tensor on cpu, torch.Size([batch_size, sequence_length, num_features]) in the 30s, sequence _length=150， num_features=8
-        #labels: tensor on cpu, torch.Size([batch_size])
-        
-        #  input shape of ours-T is [B, patches, patch_size]
-
-        data_batch = data_batch.to(device) #put inputs to device
-        labels_batch = labels_batch.to(device) #when performing training, need to also put labels to device to do loss calculation and backpropagation
-
-        #forward pass
-        #outputs: tensor on gpu, requires grad, torch.Size([batch_size, num_classes])
-        output_batch = model(data_batch)
-        
-        #calculate loss
-        #loss: tensor (scalar) on gpu, torch.Size([])
-        loss = criterion(output_batch, labels_batch)
-        
-        # Piecewise decay flooding. b is flooding level, b = 0 means no flooding
-        if epoch < 30:  # pretrain 10; train/finetune 30
-            b = flooding_level[0]
-        elif epoch < 50:  # pretrain 30; train/finetune 50
-            b = flooding_level[1]
-        else:
-            b = flooding_level[2]
-        
-        # flooding
-        loss = (loss - b).abs() + b
-
-        #update running average of the loss
-        loss_avg.update(loss.item())
-        
-        #clear previous gradients
-        optimizer.zero_grad()
-
-        #calculate gradient
-        loss.backward()
-        #perform parameters update
-        optimizer.step()
-    
-    average_loss_this_epoch = loss_avg()
-    return average_loss_this_epoch
-
-def eval_model_fNIRST(model, eval_loader, device):
-    
-    # evaluation for the fNIRS-preT models with an input of [B, 2, fNIRS channels, sampling points]
-    model.eval()
-    
-#     predicted_array = None # 1d numpy array, [batch_size * num_batches]
-    labels_array = None # 1d numpy array, [batch_size * num_batches]
-    probabilities_array = None # 2d numpy array, [batch_size * num_batches, num_classes] 
-    
-    for data_batch, labels_batch in eval_loader:#test_loader
-        print('Inside eval_model, size of data_batch is {}'.format(data_batch.shape))
-        #inputs: tensor on cpu, torch.Size([batch_size, sequence_length, num_features])
-        #labels: tensor on cpu, torch.Size([batch_size])
-       
-        data_batch = data_transform(data_batch)  # transform the data form to the input of fNIRS-preT
-        # input shape of fNIRS-preT is [B, 2, fNIRS channels, sampling points]
-
-        data_batch = data_batch.to(device) #put inputs to device
-
-        #forward pass
-        #outputs: tensor on gpu, requires grad, torch.Size([batch_size, num_classes])
-        output_batch = model(data_batch)
-        
-        #extract data from torch variable, move to cpu, convert to numpy arrays    
-        if labels_array is None:
-#             label_array = labels.numpy()
-            labels_array = labels_batch.data.cpu().numpy()
-            
-        else:
-            labels_array = np.concatenate((labels_array, labels_batch.data.cpu().numpy()), axis=0)#np.concatenate without axis will flattened to 1d array
-        
-        
-        if probabilities_array is None:
-            probabilities_array = output_batch.data.cpu().numpy()
-        else:
-            probabilities_array = np.concatenate((probabilities_array, output_batch.data.cpu().numpy()), axis = 0) #concatenate on batch dimension: torch.Size([batch_size * num_batches, num_classes])
-            
-    class_predictions_array = probabilities_array.argmax(1)
-#     print('class_predictions_array.shape: {}'.format(class_predictions_array.shape))
-
-#     class_labels_array = onehot_labels_array.argmax(1)
-    labels_array = labels_array
-    accuracy = (class_predictions_array == labels_array).mean() * 100
-#     accuracy = (class_predictions_array == class_labels_array).mean() * 100
-    
-    
-    return accuracy, class_predictions_array, labels_array, probabilities_array
-
-def eval_model_OursT(model, eval_loader, device):
-    
-    # evaluation for the ours-T models with an input of [B, patches, patch_size]
-    model.eval()
-    
-#     predicted_array = None # 1d numpy array, [batch_size * num_batches]
-    labels_array = None # 1d numpy array, [batch_size * num_batches]
-    probabilities_array = None # 2d numpy array, [batch_size * num_batches, num_classes] 
-    
-    for data_batch, labels_batch in eval_loader:#test_loader
-        # print('Inside eval_model, size of data_batch is {}'.format(data_batch.shape))
-        #inputs: tensor on cpu, torch.Size([batch_size, sequence_length, num_features])
-        #labels: tensor on cpu, torch.Size([batch_size])
-       
-        # input shape of ours-T is [B, patches, patch_size]
-
-        data_batch = data_batch.to(device) #put inputs to device
-
-        #forward pass
-        #outputs: tensor on gpu, requires grad, torch.Size([batch_size, num_classes])
-        output_batch = model(data_batch)
-        
-        #extract data from torch variable, move to cpu, convert to numpy arrays    
-        if labels_array is None:
-#             label_array = labels.numpy()
-            labels_array = labels_batch.data.cpu().numpy()
-            
-        else:
-            labels_array = np.concatenate((labels_array, labels_batch.data.cpu().numpy()), axis=0)#np.concatenate without axis will flattened to 1d array
-        
-        
-        if probabilities_array is None:
-            probabilities_array = output_batch.data.cpu().numpy()
-        else:
-            probabilities_array = np.concatenate((probabilities_array, output_batch.data.cpu().numpy()), axis = 0) #concatenate on batch dimension: torch.Size([batch_size * num_batches, num_classes])
-            
-    class_predictions_array = probabilities_array.argmax(1)
-#     print('class_predictions_array.shape: {}'.format(class_predictions_array.shape))
-
-#     class_labels_array = onehot_labels_array.argmax(1)
-    labels_array = labels_array
-    accuracy = (class_predictions_array == labels_array).mean() * 100
-#     accuracy = (class_predictions_array == class_labels_array).mean() * 100
-    
-    
-    return accuracy, class_predictions_array, labels_array, probabilities_array
 
 def eval_model_confusion_matrix(model, eval_loader, device):
     
@@ -2599,8 +2448,76 @@ def eval_model_fea_classPrototypes(model, source_train_loader_prototypes, target
                 memoryBank_target = np.concatenate((memoryBank_target, _class_prototype_target),axis=0)
     
     return memoryBank_source, memoryBank_target
+
+def eval_model_fea_lossWeigt_selfpace(model, eval_loader, criterion, device, lambda_val):
     
+    # this is set to caculate loss based weight for each class during training
+    # paper: Wang H, Qi Y, Yao L, et al. A Human–Machine Joint Learning Framework to Boost Endogenous BCI Training[J]. IEEE Transactions on Neural Networks and Learning Systems, 2023. DOI: 10.1109/TNNLS.2023.3305621
+    # using the method for the simulation experiment
+    # referring to https://github.com/twotwobrother/Joint-learning-DEMO/blob/main/SPCSPcell.m, which is a demo of the joint learning, we are not sure whether it is an official implementation
     
+    # Set the model to evaluation mode
+    model.eval()
+    
+    # Arrays to store labels, data batches, and losses
+    labels_array = None
+    data_batches_array = None
+    losses_array = None
+
+    for data_batch, labels_batch in eval_loader:
+        data_batch = data_batch.to(device)  # Move inputs to device
+        labels_batch = labels_batch.to(device)
+        
+        # Forward pass
+        output_batch, _ = model(data_batch)
+        loss = criterion(output_batch, labels_batch)
+        
+        # Extract data from torch variable, move to cpu, convert to numpy arrays
+        if labels_array is None:
+            labels_array = labels_batch.data.cpu().numpy()
+            data_batches_array = data_batch.data.cpu().numpy()
+            losses_array = loss.data.cpu().numpy()
+        else:
+            labels_array = np.concatenate((labels_array, labels_batch.data.cpu().numpy()), axis=0)
+            data_batches_array = np.concatenate((data_batches_array, data_batch.data.cpu().numpy()), axis=0)
+            losses_array = np.concatenate((losses_array, loss.data.cpu().numpy()), axis=0)
+
+    # Calculate class-wise losses and apply lambda threshold
+    selected_indices = []
+    unique_labels = np.unique(labels_array)
+    for label in unique_labels:
+        label_indices = np.where(labels_array == label)[0]
+        label_losses = losses_array[label_indices]
+
+        # Calculate quantile threshold 
+        threshold_value = torch.quantile(torch.tensor(label_losses), lambda_val)
+        
+        # Select indices with losses below threshold 
+        selected_label_indices = label_indices[label_losses < threshold_value.item()] 
+        selected_indices.extend(selected_label_indices)
+
+    # Caculate weights for each sample
+    selected_indices = np.array(selected_indices)
+    selected_labels = labels_array[selected_indices]
+    selected_losses = losses_array[selected_indices]
+    selected_data_batches = data_batches_array[selected_indices]
+
+    # Normalize the entire losses_array using the maximum loss and adding eps to avoid division by zero 
+    # in the origin paper, the loss for all samples are normalized using the maximum loss of the entire dataset
+    eps = 1e-10 
+    max_loss = np.max(losses_array) 
+    losses_array_normalized = losses_array / (max_loss + eps)
+    kexi = 1 - lambda_val
+    if kexi<0:
+        kexi = eps
+    
+    # calculate the weights for each selected sample
+    weights = np.zeros_like(selected_losses)
+    for i in range(len(selected_indices)): 
+        weights[i] = np.log(losses_array_normalized[selected_indices[i]] + eps)/np.log(eps)
+     
+    return selected_data_batches, selected_labels, weights
+
 
 class EarlyStopping(object):
     def __init__(self, monitor: str = 'val_loss', mode: str = 'min', patience: int = 1):
