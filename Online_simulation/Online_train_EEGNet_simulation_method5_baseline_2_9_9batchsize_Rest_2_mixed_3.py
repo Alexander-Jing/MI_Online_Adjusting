@@ -448,7 +448,7 @@ def Online_updating_EEGLM_simulation(args_dict):
             initial_train_features = np.concatenate(initial_train_features, axis=0)
             initial_train_labels = np.concatenate(initial_train_labels, axis=0)
             sub_online_train_set_initial = brain_dataset(initial_train_features, initial_train_labels)
-            sub_online_train_loader_initial = torch.utils.data.DataLoader(sub_online_train_set_initial, batch_size=batch_size_online, shuffle=True)
+            sub_online_train_loader_initial = torch.utils.data.DataLoader(sub_online_train_set_initial, batch_size=batch_size, shuffle=True)
             # train the initial model 
             # the loss function
             criterion = nn.CrossEntropyLoss()
@@ -489,7 +489,7 @@ def Online_updating_EEGLM_simulation(args_dict):
                     
                     # second, caculate the weight for the selected samples, in the deep learning form, we also use the newweights(index)=log(normedloss(index)+kexi)/log(kexi) for calculation
                     selected_data_weights  = brain_dataset_weight(selected_data_batches, selected_labels, weights)
-                    selected_data_weights_loader = torch.utils.data.DataLoader(selected_data_weights, batch_size=batch_size_online, shuffle=True)
+                    selected_data_weights_loader = torch.utils.data.DataLoader(selected_data_weights, batch_size=batch_size, shuffle=True)
                     
                     # finally, tune the model with the weights and samples, in the CSP-SVM form, the whole model is retrained using the the weights and samples in each iteration round 
                     # while in a deep learning form, it is hard to retrain the model using such amount of data, so we only use the selected samples to tune the model

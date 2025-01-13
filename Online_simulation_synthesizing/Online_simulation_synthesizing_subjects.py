@@ -1264,7 +1264,7 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
         return 'No updating','#386fb7'
     if method=='method5_encoder3_pretrainlight_baseline_1_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_1_1_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_3' or method=='method5_EEGNet_baseline_1_3_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4_seed3407':
         return "Lin's",'#E0802A'
-    if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_1':
+    if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1':
         return "Wang's",'#3b9144'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_4':
         return  r'$L_{ce}+L_{kdr}+L_{focal}$', '#AF5A76'
@@ -1318,7 +1318,7 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new':
         return "Model retraining",'#3852A4'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_3' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new':
-        return "Abu-Rmileh's",'#838482'
+        return "Model finetuning",'#838482'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_lessdata':
         return "Ours (less data)", '#AF5A76'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_3_scratch_focal' or method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_3_scratch':
