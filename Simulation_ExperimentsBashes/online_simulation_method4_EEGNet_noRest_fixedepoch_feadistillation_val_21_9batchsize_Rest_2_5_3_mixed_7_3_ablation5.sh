@@ -23,7 +23,7 @@ do
     --proportion 0.75 \
     --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed3407" \
     --Online_folder_path "Online_DataCollected" \
-    --Online_result_save_rootdir "Online_simulation_experiments/method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation5_seed3407" \
+    --Online_result_save_rootdir "Online_simulation_experiments/method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation5_seed3407_0_1" \
     --restore_file "pretrained_weights/checkpoints_test_predict/checkpoints_test_encoder3_light/encoder_epoch_1.0.pt" \
     --n_epoch_offline 16 \
     --n_epoch_online  2 \
