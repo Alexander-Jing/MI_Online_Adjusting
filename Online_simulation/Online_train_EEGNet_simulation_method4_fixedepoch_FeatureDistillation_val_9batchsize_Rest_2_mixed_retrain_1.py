@@ -423,7 +423,7 @@ def Online_updating_EEGNet_simulation(args_dict):
                         whole_model_is_best = False
                         whole_model_best_val_accuracy = 0
                         
-                        _n_epoch_online = 16  # the epoch is set 16 for retraining the whole model
+                        _n_epoch_online = n_epoch_online  # the epoch is set 16 for retraining the whole model
                         
                         for epoch in trange(_n_epoch_online, desc='online classification update whole model'):
                             average_loss_this_epoch = train_one_epoch_fea(model, optimizer, criterion, source_train_loader, device)

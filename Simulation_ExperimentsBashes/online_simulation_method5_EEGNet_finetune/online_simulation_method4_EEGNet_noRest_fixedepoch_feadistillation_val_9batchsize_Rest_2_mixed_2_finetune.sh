@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 你的程序的路径
-program_path="Online_simulation/Online_train_EEGNet_simulation_method5_baseline_2_9_9batchsize_Rest_2_mixed_3.py"
+program_path="Online_simulation/Online_train_EEGNet_simulation_method4_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune.py"
 
 # 你的工作目录的路径
 workspace_folder="/home/jyt/workspace/MI_Online_Adjusting"
@@ -14,20 +14,20 @@ for i in $(seq 1 25)
 do
   sub_name=$(printf "%03d" $i)
   python3 $program_path \
-    --seed 42 \
+    --seed 3407 \
     --gpu_idx 0 \
     --sub_name $sub_name \
     --Offline_folder_path "/home/jyt/workspace/transfer_models/datasets_MI/hand_elbow/derivatives" \
     --windows_num 120 \
     --trial_pre 120 \
     --proportion 0.75 \
-    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed42_epoch100" \
+    --Offline_result_save_rootdir "Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new_seed3407" \
     --Online_folder_path "Online_DataCollected" \
-    --Online_result_save_rootdir "Online_simulation_experiments/method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_2_epoch100_1" \
-    --restore_file "pretrained_weights/checkpoints_test_predict/checkpoints_test_encoder3_light/encoder_epoch_1.0.pt" \
+    --Online_result_save_rootdir "Online_simulation_experiments/method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune" \
+    --restore_file "None" \
     --n_epoch_offline 32 \
-    --n_epoch_online  8 \
-    --batch_size 16 \
+    --n_epoch_online  4 \
+    --batch_size 32 \
     --mode "online" \
     --batch_size_online 9 \
     --trial_nums 96 \
@@ -37,6 +37,5 @@ do
     --alpha_distill 0.50 \
     --update_trial 1 \
     --update_wholeModel 12 \
-    --preprocess_norm "True" \
-    --A_init 0.6
+    --preprocess_norm "True"
 done
