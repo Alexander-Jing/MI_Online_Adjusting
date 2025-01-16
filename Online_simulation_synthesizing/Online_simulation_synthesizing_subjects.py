@@ -1183,11 +1183,12 @@ def Online_simulation_synthesizing_results_comparison_polynomial(Online_result_s
     plt.close()
 
 
-def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=25.0, upper=60.0, retrain_method='Model retraining'):
+def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=25.0, upper=65.0, retrain_method='Model retraining'):
     
     matplotlib.rcParams["font.family"] = "Times New Roman"
     # 设置图形大小
-    plt.figure(figsize=(16, 9))
+    plt.figure(figsize=(12, 9))
+    # plt.figure(figsize=(16, 9))
 
     # 设置seaborn样式
     sns.set_theme()
