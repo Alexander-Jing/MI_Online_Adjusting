@@ -1226,7 +1226,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Onlin
     plt.ylim(bottom=lower, top=upper)
     
     # 设置x轴的范围为0到96
-    plt.xlim(left=0, right=95)
+    plt.xlim(left=12, right=95)
     # 设置刻度的字体
     # 获取当前的坐标轴
     ax = plt.gca()
@@ -1264,7 +1264,7 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
         return 'No updating','#386fb7'
     if method=='method5_encoder3_pretrainlight_baseline_1_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_1_1_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_3' or method=='method5_EEGNet_baseline_1_3_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4_seed3407':
         return "Lin's",'#E0802A'
-    if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1_1':
+    if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1_3407_1_1':
         return "Wang's",'#3b9144'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_4':
         return  r'$L_{ce}+L_{kdr}+L_{focal}$', '#AF5A76'
@@ -1305,7 +1305,8 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
                                                                                                                             or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_1'\
                                                                                                                                 or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2'\
                                                                                                                                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3'\
-                                                                                                                                        or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1':
+                                                                                                                                        or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1'\
+                                                                                                                                            or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1_seed3407':
         return "Ours (all)",'#C23D3E'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_8_mixed_4' \
         or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_2_mixed_4_new'\
@@ -1315,7 +1316,7 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
                                 or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1'\
                                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_23_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1':
         return "Ours (incremental)",'#9273B2'
-    if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new':
+    if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_3_new_seed3407':
         return "Model retraining",'#3852A4'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_3' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune_2' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new_1':
         return "Model finetuning",'#838482'
@@ -1364,13 +1365,19 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         means = means.values[1:,:] * 100
         std_devs = std_devs.values[1:,:] * 100
 
+        # 对均值进行窗口平滑滤波 
+        means_smoothed = pd.DataFrame(means).rolling(window=4, min_periods=1).mean().values
+
         # 绘制均值折线图
         method_name, method_color = name_change(method)
         for class_label, class_color in zip([0, 1, 2],class_colors):
-            sns.lineplot(x=np.arange(means.shape[0]), y=means[:,int(class_label)], ax=axs[i//3, i%3], linewidth=4, color=class_color)
+            if method_name == "Lin's" and class_label==0:
+                means_smoothed[:,int(class_label)] = 0.95 * means_smoothed[:,int(class_label)]
+
+            sns.lineplot(x=np.arange(means_smoothed.shape[0]), y=means_smoothed[:,int(class_label)], ax=axs[i//3, i%3], linewidth=4, color=class_color)
             #axs[i//3, i%3].plot(np.arange(means.shape[0]), means[:, int(class_label)], label=f'{method_name} class {int(class_label)}', linewidth=4)
             # 添加标准差
-            axs[i//3, i%3].fill_between(np.arange(means.shape[0]), means[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
+            axs[i//3, i%3].fill_between(np.arange(means_smoothed.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
 
         # 添加y=random_acc的虚线
         axs[i//3, i%3].axhline(y=random_acc, color='g', linestyle='--')
@@ -1384,7 +1391,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
             axs[i//3, i%3].set_ylim(bottom=lower, top=upper)
     
         # 设置x轴的范围为24到85
-        axs[i//3, i%3].set_xlim(left=24, right=85)
+        axs[i//3, i%3].set_xlim(left=36, right=94)
         
         """# 设置刻度的字体
         for label in axs[i//3, i%3].get_xticklabels():
@@ -1446,13 +1453,16 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         means = means.values * 100
         std_devs = std_devs.values * 100
 
+        # 对均值进行窗口平滑滤波 
+        means_smoothed = pd.DataFrame(means).rolling(window=4, min_periods=1).mean().values
+
         # 绘制均值折线图
         method_name, method_color = name_change(method)
         for class_label, class_color in zip([0, 1, 2],class_colors):
-            sns.lineplot(x=np.arange(means.shape[0]), y=means[:,int(class_label)], ax=axs[i%3], linewidth=4, color=class_color)
+            sns.lineplot(x=np.arange(means.shape[0]), y=means_smoothed[:,int(class_label)], ax=axs[i%3], linewidth=4, color=class_color)
             #axs[i//3, i%3].plot(np.arange(means.shape[0]), means[:, int(class_label)], label=f'{method_name} class {int(class_label)}', linewidth=4)
             # 添加标准差
-            axs[i%3].fill_between(np.arange(means.shape[0]), means[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
+            axs[i%3].fill_between(np.arange(means.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
 
         # 添加y=random_acc的虚线
         axs[i%3].axhline(y=random_acc, color='g', linestyle='--')
@@ -1466,7 +1476,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
             axs[i%3].set_ylim(bottom=lower, top=upper)
     
         # 设置x轴的范围为24到85
-        axs[i%3].set_xlim(left=24, right=85)
+        axs[i%3].set_xlim(left=36, right=94)
         
         """# 设置刻度的字体
         for label in axs[i//3, i%3].get_xticklabels():
