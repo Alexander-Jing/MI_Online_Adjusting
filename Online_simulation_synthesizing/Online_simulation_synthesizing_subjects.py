@@ -1183,7 +1183,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial(Online_result_s
     plt.close()
 
 
-def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=25.0, upper=65.0, retrain_method='Model retraining'):
+def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=28.0, upper=68.0, retrain_method='Model retraining'):
     
     matplotlib.rcParams["font.family"] = "Times New Roman"
     # 设置图形大小
@@ -1221,7 +1221,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Onlin
     # 添加y=random_acc的虚线
     plt.axhline(y=random_acc, color='g', linestyle='--', label=f'Random accuracy: {random_acc}')
     # 创建一个字体对象，调整字体用
-    font_prop = fm.FontProperties(family='Times New Roman', size=18)
+    font_prop = fm.FontProperties(family='Times New Roman', size=22)
 
     # 设置y轴的最小值为random_acc
     plt.ylim(bottom=lower, top=upper)
@@ -1238,7 +1238,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Onlin
         label.set_fontproperties(font_prop)
 
     # 添加标题和轴标签
-    font_prop_label = fm.FontProperties(family='Times New Roman', size=20)
+    font_prop_label = fm.FontProperties(family='Times New Roman', size=22)
     #plt.title('Average accuracy every iteration')
     plt.xlabel('Trials', fontproperties=font_prop_label)
     plt.ylabel('Accuracy(%)', fontproperties=font_prop_label)
@@ -1350,7 +1350,10 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
     
     matplotlib.rcParams["font.family"] = "Times New Roman"
     # 设置图形大小
-    fig, axs = plt.subplots(row, col, figsize=(16, 9))
+    if col==3:
+        fig, axs = plt.subplots(row, col, figsize=(16, 9))
+    else:
+        fig, axs = plt.subplots(row, col, figsize=(14, 12))
 
     # 设置seaborn样式
     sns.set_theme()
@@ -1375,37 +1378,38 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
             if method_name == "Lin's" and class_label==0:
                 means_smoothed[:,int(class_label)] = 0.95 * means_smoothed[:,int(class_label)]
 
-            sns.lineplot(x=np.arange(means_smoothed.shape[0]), y=means_smoothed[:,int(class_label)], ax=axs[i//3, i%3], linewidth=4, color=class_color)
+            sns.lineplot(x=np.arange(means_smoothed.shape[0]), y=means_smoothed[:,int(class_label)], ax=axs[i//col, i%col], linewidth=4, color=class_color)
             #axs[i//3, i%3].plot(np.arange(means.shape[0]), means[:, int(class_label)], label=f'{method_name} class {int(class_label)}', linewidth=4)
             # 添加标准差
-            axs[i//3, i%3].fill_between(np.arange(means_smoothed.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
+            axs[i//col, i%col].fill_between(np.arange(means_smoothed.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
 
         # 添加y=random_acc的虚线
-        axs[i//3, i%3].axhline(y=random_acc, color='g', linestyle='--')
+        axs[i//col, i%col].axhline(y=random_acc, color='g', linestyle='--')
         # 创建一个字体对象，调整字体用
-        font_prop = fm.FontProperties(family='Times New Roman', size=16)
+        font_prop = fm.FontProperties(family='Times New Roman', size=24)
 
         # 设置y轴的最小值为random_acc
         if method_name=="Lin's" or method_name=="Wang's":    
-            axs[i//3, i%3].set_ylim(bottom=lower, top=upper)
+            axs[i//col, i%col].set_ylim(bottom=lower, top=upper)
         else:
-            axs[i//3, i%3].set_ylim(bottom=lower, top=upper)
+            axs[i//col, i%col].set_ylim(bottom=lower, top=upper)
     
         # 设置x轴的范围为24到85
-        axs[i//3, i%3].set_xlim(left=36, right=94)
+        axs[i//col, i%col].set_xlim(left=36, right=94)
         
-        """# 设置刻度的字体
-        for label in axs[i//3, i%3].get_xticklabels():
-            label.set_fontproperties(font_prop)
-        for label in axs[i//3, i%3].get_yticklabels():
-            label.set_fontproperties(font_prop)
-        """
+        # 设置刻度的字体
+        font_prop_x = fm.FontProperties(family='Times New Roman', size=24)
+        for label in axs[i//col, i%col].get_xticklabels():
+            label.set_fontproperties(font_prop_x)
+        for label in axs[i//col, i%col].get_yticklabels():
+            label.set_fontproperties(font_prop_x)
+        
         # 添加标题和轴标签
-        font_prop_label = fm.FontProperties(family='Times New Roman', size=16)
-        font_prop_title = fm.FontProperties(family='Times New Roman', size=18, weight='bold')
-        axs[i//3, i%3].set_xlabel('Trials', fontproperties=font_prop_label)
-        axs[i//3, i%3].set_ylabel('Accuracy(%)', fontproperties=font_prop_label)
-        axs[i//3, i%3].set_title(method_name, fontproperties=font_prop_title)
+        font_prop_label = fm.FontProperties(family='Times New Roman', size=24)
+        font_prop_title = fm.FontProperties(family='Times New Roman', size=24, weight='bold')
+        axs[i//col, i%col].set_xlabel('Trials', fontproperties=font_prop_label)
+        axs[i//col, i%col].set_ylabel('Accuracy(%)', fontproperties=font_prop_label)
+        axs[i//col, i%col].set_title(method_name, fontproperties=font_prop_title)
 
         # 添加图例
         #axs[i//3, i%3].legend(loc='upper left', prop=font_prop)
@@ -1438,7 +1442,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
     
     matplotlib.rcParams["font.family"] = "Times New Roman"
     # 设置图形大小
-    fig, axs = plt.subplots(row, col, figsize=(16, 5))
+    fig, axs = plt.subplots(row, col, figsize=(14, 7))
 
     # 设置seaborn样式
     sns.set_theme()
@@ -1460,37 +1464,38 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         # 绘制均值折线图
         method_name, method_color = name_change(method)
         for class_label, class_color in zip([0, 1, 2],class_colors):
-            sns.lineplot(x=np.arange(means.shape[0]), y=means_smoothed[:,int(class_label)], ax=axs[i%3], linewidth=4, color=class_color)
+            sns.lineplot(x=np.arange(means.shape[0]), y=means_smoothed[:,int(class_label)], ax=axs[i%col], linewidth=4, color=class_color)
             #axs[i//3, i%3].plot(np.arange(means.shape[0]), means[:, int(class_label)], label=f'{method_name} class {int(class_label)}', linewidth=4)
             # 添加标准差
-            axs[i%3].fill_between(np.arange(means.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
+            axs[i%col].fill_between(np.arange(means.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
 
         # 添加y=random_acc的虚线
-        axs[i%3].axhline(y=random_acc, color='g', linestyle='--')
+        axs[i%col].axhline(y=random_acc, color='g', linestyle='--')
         # 创建一个字体对象，调整字体用
-        font_prop = fm.FontProperties(family='Times New Roman', size=16)
+        font_prop = fm.FontProperties(family='Times New Roman', size=22)
 
         # 设置y轴的最小值为random_acc
         if method_name==r'$L_{ce}$' or method_name=="Ablation 3":    
-            axs[i%3].set_ylim(bottom=20, top=50)
+            axs[i%col].set_ylim(bottom=20, top=50)
         else:
-            axs[i%3].set_ylim(bottom=lower, top=upper)
+            axs[i%col].set_ylim(bottom=lower, top=upper)
     
         # 设置x轴的范围为24到85
-        axs[i%3].set_xlim(left=36, right=94)
+        axs[i%col].set_xlim(left=36, right=94)
         
-        """# 设置刻度的字体
-        for label in axs[i//3, i%3].get_xticklabels():
-            label.set_fontproperties(font_prop)
-        for label in axs[i//3, i%3].get_yticklabels():
-            label.set_fontproperties(font_prop)
-        """
+        # 设置刻度的字体
+        font_prop_x = fm.FontProperties(family='Times New Roman', size=22)
+        for label in axs[i%col].get_xticklabels():
+            label.set_fontproperties(font_prop_x)
+        for label in axs[i%col].get_yticklabels():
+            label.set_fontproperties(font_prop_x)
+        
         # 添加标题和轴标签
-        font_prop_label = fm.FontProperties(family='Times New Roman', size=16)
-        font_prop_title = fm.FontProperties(family='Times New Roman', size=18, weight='bold')
-        axs[i%3].set_xlabel('Trials', fontproperties=font_prop_label)
-        axs[i%3].set_ylabel('Accuracy(%)', fontproperties=font_prop_label)
-        axs[i%3].set_title(method_name, fontproperties=font_prop_title)
+        font_prop_label = fm.FontProperties(family='Times New Roman', size=22)
+        font_prop_title = fm.FontProperties(family='Times New Roman', size=22, weight='bold')
+        axs[i%col].set_xlabel('Trials', fontproperties=font_prop_label)
+        axs[i%col].set_ylabel('Accuracy(%)', fontproperties=font_prop_label)
+        axs[i%col].set_title(method_name, fontproperties=font_prop_title)
 
         # 添加图例
         #axs[i//3, i%3].legend(loc='upper left', prop=font_prop)

@@ -93,7 +93,7 @@
             "args": [
                 "--seed", "3407",
                 "--gpu_idx", "0",
-                "--sub_name", "001",
+                "--sub_name", "014",
                 "--Offline_folder_path", "/home/jyt/workspace/transfer_models/datasets_MI/hand_elbow/derivatives",
                 "--windows_num", "120",
                 "--trial_pre", "120",
