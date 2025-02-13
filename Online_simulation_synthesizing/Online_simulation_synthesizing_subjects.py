@@ -1264,9 +1264,12 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
     if method=='baseline1_encoder3_noupdate_noRest_val_6_9batchsize_Rest_mixed_2' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_150' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_1' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_2' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_3' or method=='baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new_4':
         return 'No updating','#386fb7'
     if method=='method5_encoder3_pretrainlight_baseline_1_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_1_1_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_3' or method=='method5_EEGNet_baseline_1_3_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4_seed3407':
-        return "Lin's",'#E0802A'
+        # return "Lin's",'#E0802A'
+        return "Real-time finetuning",'#E0802A'
+        # return "Model finetuning",'#E0802A'
     if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1_3407_1_1':
-        return "Wang's",'#3b9144'
+        # return "Wang's",'#3b9144'
+        return "Weighted updating",'#3b9144'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_4':
         return  r'$L_{ce}+L_{kdr}+L_{focal}$', '#AF5A76'
         #return  'Lce+Lkdr+Lfocal', '#AF5A76'
@@ -1308,7 +1311,8 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
                                                                                                                                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3'\
                                                                                                                                         or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1'\
                                                                                                                                             or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1_seed3407':
-        return "Ours (all)",'#C23D3E'
+        # return "Ours (all)",'#C23D3E'
+        return "C-GOAL (all)",'#C23D3E'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_8_mixed_4' \
         or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_2_mixed_4_new'\
                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_19_9batchsize_Rest_2_2_1_mixed_4_new'\
@@ -1316,7 +1320,8 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
                             or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2'\
                                 or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1'\
                                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_23_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1':
-        return "Ours (incremental)",'#9273B2'
+        # return "Ours (incremental)",'#9273B2'
+        return "C-GOAL (incremental)",'#9273B2'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_3_new_seed3407':
         return "Model retraining",'#3852A4'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_3' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune_2' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new_1':
@@ -1337,9 +1342,11 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
         return r'$L_{ce}$', '#AF5A76'
         #return 'Lce', '#AF5A76'
     if method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation3_m0_3407':
-        return "Ablation 3", '#AF5A76'
+        # return "Ablation 3", '#AF5A76'
+        return "Variant 1", '#AF5A76'
     if method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_ablation2_m0.9_3407':
-        return "Ablation 2", '#AF5A76'
+        # return "Ablation 2", '#AF5A76'
+        return "Variant 2", '#AF5A76'
     
 # 设置seaborn样式
 sns.set_theme(style="darkgrid")
@@ -1475,7 +1482,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         font_prop = fm.FontProperties(family='Times New Roman', size=22)
 
         # 设置y轴的最小值为random_acc
-        if method_name==r'$L_{ce}$' or method_name=="Ablation 3":    
+        if method_name==r'$L_{ce}$' or method_name=="Variant 1":    
             axs[i%col].set_ylim(bottom=20, top=50)
         else:
             axs[i%col].set_ylim(bottom=lower, top=upper)
