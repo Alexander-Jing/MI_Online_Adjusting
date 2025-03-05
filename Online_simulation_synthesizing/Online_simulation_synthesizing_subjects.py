@@ -8,6 +8,7 @@ import seaborn as sns
 from scipy.optimize import curve_fit
 from scipy.stats import ttest_rel
 from sklearn.metrics import accuracy_score, f1_score
+from helpers.utils import plot_calibration_histogram, plot_calibration_histogram_per_class, plot_calibration_histogram_per_class_avg
 
 def Online_simulation_synthesizing_results(Online_result_save_rootdir):
    # 初始化一个空的列表来存储所有被试的数据
@@ -366,6 +367,50 @@ def Online_simulation_synthesizing_results_polynomial_avg(Online_result_save_roo
     # 保存图形到data_folder文件夹
     plt.savefig(f'{Online_result_save_rootdir}/synthesizing_results_subjects_polynomial.png')
     plt.close()
+
+def Online_simulation_synthesizing_results_calibration_avg(Online_result_save_rootdir):
+    # 初始化一个空的列表来存储所有被试的数据
+    labels_arrays = []
+    probabilities_arrays = np.empty((0, 3))
+
+    # 遍历所有被试
+    for i in range(1, 26):
+        # 格式化被试的文件夹名
+        subject_folder = f'{Online_result_save_rootdir}/0{i:02d}'
+
+        # 在被试的文件夹中找到所有以'lr'开头的文件
+        for file in os.listdir(subject_folder):
+            if file.startswith('lr'):
+                # 使用numpy读取predict_accuracies.csv文件
+                label = np.loadtxt(f'{subject_folder}/{file}/labels_arrays.csv', delimiter=',',skiprows=1)
+                probability = np.loadtxt(f'{subject_folder}/{file}/probabilities_arrays.csv', delimiter=',',skiprows=1)
+        
+                labels_arrays.extend(label.tolist())
+                probabilities_arrays = np.vstack((probabilities_arrays, probability))
+    
+    plot_calibration_histogram(np.array(labels_arrays), probabilities_arrays, Online_result_save_rootdir, temperature=2.5, n_bins=10)
+
+def Online_simulation_synthesizing_results_calibration_perclass(Online_result_save_rootdir):
+    # 初始化一个空的列表来存储所有被试的数据
+    labels_arrays = []
+    probabilities_arrays = np.empty((0, 3))
+
+    # 遍历所有被试
+    for i in range(1, 26):
+        # 格式化被试的文件夹名
+        subject_folder = f'{Online_result_save_rootdir}/0{i:02d}'
+
+        # 在被试的文件夹中找到所有以'lr'开头的文件
+        for file in os.listdir(subject_folder):
+            if file.startswith('lr'):
+                # 使用numpy读取predict_accuracies.csv文件
+                label = np.loadtxt(f'{subject_folder}/{file}/labels_arrays.csv', delimiter=',',skiprows=1)
+                probability = np.loadtxt(f'{subject_folder}/{file}/probabilities_arrays.csv', delimiter=',',skiprows=1)
+        
+                labels_arrays.extend(label.tolist())
+                probabilities_arrays = np.vstack((probabilities_arrays, probability))
+    
+    plot_calibration_histogram_per_class_avg(np.array(labels_arrays), probabilities_arrays, Online_result_save_rootdir, temperature=2.0, n_bins=10)
 
 def Online_simulation_synthesizing_results_polynomial_avg_1(Online_result_save_rootdir, random_acc=33.0, data_session_avg=24):
     # 初始化一个空的列表来存储所有被试的数据

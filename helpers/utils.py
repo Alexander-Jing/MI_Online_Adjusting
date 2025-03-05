@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix as sklearn_cm
 import seaborn as sns
 
+from sklearn.preprocessing import label_binarize
+from sklearn.calibration import calibration_curve
+
 from einops import rearrange, repeat
 from torch import nn, einsum
 from einops.layers.torch import Rearrange
@@ -3191,3 +3194,173 @@ class MMD_loss(nn.Module):
             YX = torch.mean(kernels[batch_size:, :batch_size])
             loss = torch.mean(XX + YY - XY - YX)
             return loss
+
+
+def softmax(x, axis=None):
+    """Compute softmax values for each row (or column) of the input array."""
+    # Subtract the max value for numerical stability
+    x_exp = np.exp(x - np.max(x, axis=axis, keepdims=True))
+    return x_exp / np.sum(x_exp, axis=axis, keepdims=True)
+
+def temperature_scaling(logits, temperature):
+    """Apply temperature scaling to logits."""
+    return logits / temperature
+
+def plot_calibration_histogram(y_true, logits, result_save_subjectdir, temperature=1.0, n_bins=10):
+    """
+    Plot a calibration histogram (reliability diagram) for multi-class tasks.
+
+    Args:
+        y_true (np.array): True labels, shape (n_samples,).
+        logits (np.array): Model logits, shape (n_samples, n_classes).
+        result_save_subjectdir (str): Directory to save the plot.
+        temperature (float): Temperature for scaling. Default is 1.0 (no scaling).
+        n_bins (int): Number of bins for the histogram. Default is 10.
+    """
+    # Apply temperature scaling to logits
+    scaled_logits = temperature_scaling(logits, temperature)
+    
+    # Convert logits to probabilities using softmax
+    y_pred_probs = softmax(scaled_logits, axis=1)
+    
+    # Get the predicted confidence (maximum probability) and predicted class
+    y_pred_conf = np.max(y_pred_probs, axis=1)  # Confidence
+    y_pred_class = np.argmax(y_pred_probs, axis=1)  # Predicted class
+    
+    # Compute calibration curve
+    prob_true, prob_pred = calibration_curve(y_true == y_pred_class, y_pred_conf, n_bins=n_bins, strategy='uniform')
+    
+    # Create the directory if it doesn't exist
+    makedir_if_not_exist(result_save_subjectdir)
+    
+    # Plot the calibration histogram
+    plt.figure(figsize=(8, 6))
+    plt.bar(prob_pred, prob_true, width=0.1, alpha=0.7, label='Calibration Histogram')
+    plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
+    plt.xlabel('Mean Predicted Confidence')
+    plt.ylabel('Actual Accuracy')
+    plt.title('Calibration Histogram (Multi-Class)')
+    plt.legend()
+    plt.grid(True)
+    
+    # Save the plot
+    save_path = os.path.join(result_save_subjectdir, 'calibration_histogram.png')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"Plot saved to: {save_path}")
+
+def plot_calibration_histogram_per_class(y_true, logits, result_save_subjectdir, temperature=1.0, n_bins=10):
+    """
+    Plot a calibration histogram (reliability diagram) for each class in multi-class tasks.
+
+    Args:
+        y_true (np.array): True labels, shape (n_samples,).
+        logits (np.array): Model logits, shape (n_samples, n_classes).
+        result_save_subjectdir (str): Directory to save the plot.
+        temperature (float): Temperature for scaling. Default is 1.0 (no scaling).
+        n_bins (int): Number of bins for the histogram. Default is 10.
+    """
+    # Apply temperature scaling to logits
+    scaled_logits = temperature_scaling(logits, temperature)
+    
+    # Convert logits to probabilities using softmax
+    y_pred_probs = softmax(scaled_logits, axis=1)
+    
+    # Binarize the true labels for one-vs-all approach
+    n_classes = y_pred_probs.shape[1]
+    y_true_bin = label_binarize(y_true, classes=np.arange(n_classes))
+    
+    # Create the directory if it doesn't exist
+    os.makedirs(result_save_subjectdir, exist_ok=True)
+    
+    # Plot calibration histogram for each class
+    plt.figure(figsize=(12, 8))
+    for class_idx in range(n_classes):
+        plt.subplot(2, 2, class_idx + 1)  # Adjust subplot layout as needed
+        prob_true, prob_pred = calibration_curve(y_true_bin[:, class_idx], y_pred_probs[:, class_idx], n_bins=n_bins, strategy='uniform')
+        plt.bar(prob_pred, prob_true, width=0.1, alpha=0.7, label=f'Class {class_idx}')
+        plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
+        plt.xlabel('Mean Predicted Confidence')
+        plt.ylabel('Actual Accuracy')
+        plt.title(f'Class {class_idx} Calibration Histogram')
+        plt.legend()
+        plt.grid(True)
+    
+    plt.tight_layout()
+    
+    # Save the plot
+    save_path = os.path.join(result_save_subjectdir, 'calibration_histogram_per_class.png')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"Plot saved to: {save_path}")
+
+def plot_calibration_histogram_per_class_avg(y_true, logits, result_save_subjectdir, temperature=1.0, n_bins=10):
+    """
+    Plot a calibration histogram (reliability diagram) for each class in multi-class tasks,
+    and also plot an averaged calibration histogram for all classes.
+
+    Args:
+        y_true (np.array): True labels, shape (n_samples,).
+        logits (np.array): Model logits, shape (n_samples, n_classes).
+        result_save_subjectdir (str): Directory to save the plot.
+        temperature (float): Temperature for scaling. Default is 1.0 (no scaling).
+        n_bins (int): Number of bins for the histogram. Default is 10.
+    """
+    # Apply temperature scaling to logits
+    scaled_logits = temperature_scaling(logits, temperature)
+    
+    # Convert logits to probabilities using softmax
+    y_pred_probs = softmax(scaled_logits, axis=1)
+    
+    # Binarize the true labels for one-vs-all approach
+    n_classes = y_pred_probs.shape[1]
+    y_true_bin = label_binarize(y_true, classes=np.arange(n_classes))
+    
+    # Create the directory if it doesn't exist
+    os.makedirs(result_save_subjectdir, exist_ok=True)
+    
+    # Initialize lists to store calibration curves for all classes
+    all_prob_true = []
+    all_prob_pred = []
+    
+    # Plot calibration histogram for each class
+    plt.figure(figsize=(15, 10))
+    for class_idx in range(n_classes):
+        plt.subplot(2, 2, class_idx + 1)  # Adjust subplot layout as needed
+        prob_true, prob_pred = calibration_curve(y_true_bin[:, class_idx], y_pred_probs[:, class_idx], n_bins=n_bins, strategy='uniform')
+        plt.bar(prob_pred, prob_true, width=0.1, alpha=0.7, label=f'Class {class_idx}')
+        plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
+        plt.xlabel('Mean Predicted Confidence')
+        plt.ylabel('Actual Accuracy')
+        plt.title(f'Class {class_idx} Calibration Histogram')
+        plt.legend()
+        plt.grid(True)
+        
+        # Store calibration curves for averaging
+        all_prob_true.append(prob_true)
+        all_prob_pred.append(prob_pred)
+    
+    # Calculate the average calibration curve
+    avg_prob_true = np.mean(all_prob_true, axis=0)
+    avg_prob_pred = np.mean(all_prob_pred, axis=0)
+    
+    # Plot the average calibration histogram
+    plt.subplot(2, 2, n_classes + 1)  # Add a new subplot for the average
+    plt.bar(avg_prob_pred, avg_prob_true, width=0.1, alpha=0.7, label='Average Calibration')
+    plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
+    plt.xlabel('Mean Predicted Confidence')
+    plt.ylabel('Actual Accuracy')
+    plt.title('Average Calibration Histogram')
+    plt.legend()
+    plt.grid(True)
+    
+    plt.tight_layout()
+    
+    # Save the plot
+    save_path = os.path.join(result_save_subjectdir, 'calibration_histogram_per_class.png')
+    plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print(f"Plot saved to: {save_path}")
