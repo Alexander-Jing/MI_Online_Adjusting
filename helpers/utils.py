@@ -3206,6 +3206,37 @@ def temperature_scaling(logits, temperature):
     """Apply temperature scaling to logits."""
     return logits / temperature
 
+def compute_ece_mce(y_true, y_pred_probs, n_bins=10):
+    """
+    Compute ECE and MCE for a given class.
+
+    Args:
+        y_true (np.array): True binary labels for the class, shape (n_samples,).
+        y_pred_probs (np.array): Predicted probabilities for the class, shape (n_samples,).
+        n_bins (int): Number of bins for calibration. Default is 10.
+
+    Returns:
+        ece (float): Expected Calibration Error.
+        mce (float): Maximum Calibration Error.
+    """
+    # Compute calibration curve
+    prob_true, prob_pred = calibration_curve(y_true, y_pred_probs, n_bins=n_bins, strategy='uniform')
+    
+    # Compute bin sizes
+    bin_sizes = np.histogram(y_pred_probs, bins=n_bins, range=(0, 1))[0]
+    total_samples = len(y_true)
+    
+    # Compute ECE and MCE
+    ece = 0.0
+    mce = 0.0
+    for i in range(len(prob_true)):
+        bin_weight = bin_sizes[i] / total_samples
+        ece += bin_weight * np.abs(prob_true[i] - prob_pred[i])
+        mce = max(mce, np.abs(prob_true[i] - prob_pred[i]))
+    
+    return ece, mce
+
+
 def plot_calibration_histogram(y_true, logits, result_save_subjectdir, temperature=1.0, n_bins=10):
     """
     Plot a calibration histogram (reliability diagram) for multi-class tasks.
@@ -3229,6 +3260,7 @@ def plot_calibration_histogram(y_true, logits, result_save_subjectdir, temperatu
     
     # Compute calibration curve
     prob_true, prob_pred = calibration_curve(y_true == y_pred_class, y_pred_conf, n_bins=n_bins, strategy='uniform')
+    ece, mce = compute_ece_mce(y_true == y_pred_class, y_pred_conf, n_bins=n_bins)
     
     # Create the directory if it doesn't exist
     makedir_if_not_exist(result_save_subjectdir)
@@ -3239,16 +3271,18 @@ def plot_calibration_histogram(y_true, logits, result_save_subjectdir, temperatu
     plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
     plt.xlabel('Mean Predicted Confidence')
     plt.ylabel('Actual Accuracy')
-    plt.title('Calibration Histogram (Multi-Class)')
+    plt.title(f'Calibration Histogram\nECE={ece:.3f}, MCE={mce:.3f}')
     plt.legend()
     plt.grid(True)
     
+    print(f'Calibration Histogram\nECE={ece:.3f}, MCE={mce:.3f}')
     # Save the plot
     save_path = os.path.join(result_save_subjectdir, 'calibration_histogram.png')
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
     
     print(f"Plot saved to: {save_path}")
+
 
 def plot_calibration_histogram_per_class(y_true, logits, result_save_subjectdir, temperature=1.0, n_bins=10):
     """
@@ -3279,13 +3313,17 @@ def plot_calibration_histogram_per_class(y_true, logits, result_save_subjectdir,
     for class_idx in range(n_classes):
         plt.subplot(2, 2, class_idx + 1)  # Adjust subplot layout as needed
         prob_true, prob_pred = calibration_curve(y_true_bin[:, class_idx], y_pred_probs[:, class_idx], n_bins=n_bins, strategy='uniform')
+        # Compute ECE and MCE
+        ece, mce = compute_ece_mce(y_true_bin[:, class_idx], y_pred_probs[:, class_idx], n_bins=n_bins)
         plt.bar(prob_pred, prob_true, width=0.1, alpha=0.7, label=f'Class {class_idx}')
         plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
         plt.xlabel('Mean Predicted Confidence')
         plt.ylabel('Actual Accuracy')
-        plt.title(f'Class {class_idx} Calibration Histogram')
+        plt.title(f'Class {class_idx} Calibration Histogram\nECE={ece:.3f}, MCE={mce:.3f}')
         plt.legend()
         plt.grid(True)
+
+        print(f'Class {class_idx} Calibration Histogram\nECE={ece:.3f}, MCE={mce:.3f}')
     
     plt.tight_layout()
     
@@ -3330,14 +3368,17 @@ def plot_calibration_histogram_per_class_avg(y_true, logits, result_save_subject
     for class_idx in range(n_classes):
         plt.subplot(2, 2, class_idx + 1)  # Adjust subplot layout as needed
         prob_true, prob_pred = calibration_curve(y_true_bin[:, class_idx], y_pred_probs[:, class_idx], n_bins=n_bins, strategy='uniform')
+        # Compute ECE and MCE
+        ece, mce = compute_ece_mce(y_true_bin[:, class_idx], y_pred_probs[:, class_idx], n_bins=n_bins)
         plt.bar(prob_pred, prob_true, width=0.1, alpha=0.7, label=f'Class {class_idx}')
         plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
         plt.xlabel('Mean Predicted Confidence')
         plt.ylabel('Actual Accuracy')
-        plt.title(f'Class {class_idx} Calibration Histogram')
+        plt.title(f'Class {class_idx} Calibration Histogram\nECE={ece:.3f}, MCE={mce:.3f}')
         plt.legend()
         plt.grid(True)
-        
+
+        print(f'Class {class_idx} Calibration Histogram\nECE={ece:.3f}, MCE={mce:.3f}')
         # Store calibration curves for averaging
         all_prob_true.append(prob_true)
         all_prob_pred.append(prob_pred)
@@ -3345,14 +3386,14 @@ def plot_calibration_histogram_per_class_avg(y_true, logits, result_save_subject
     # Calculate the average calibration curve
     avg_prob_true = np.mean(all_prob_true, axis=0)
     avg_prob_pred = np.mean(all_prob_pred, axis=0)
-    
+
     # Plot the average calibration histogram
     plt.subplot(2, 2, n_classes + 1)  # Add a new subplot for the average
     plt.bar(avg_prob_pred, avg_prob_true, width=0.1, alpha=0.7, label='Average Calibration')
     plt.plot([0, 1], [0, 1], linestyle='--', label='Perfect Calibration', color='gray')
     plt.xlabel('Mean Predicted Confidence')
     plt.ylabel('Actual Accuracy')
-    plt.title('Average Calibration Histogram')
+    plt.title(f'Average Calibration Histogram')
     plt.legend()
     plt.grid(True)
     

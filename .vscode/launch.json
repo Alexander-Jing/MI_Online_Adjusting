@@ -217,7 +217,7 @@
                 "--proportion", "0.75",
                 "--Offline_result_save_rootdir", "${workspaceFolder}/Offline_simulation_experiments/method2_EEGNet_val_classval_pretrainlight_unfreeze_new",
                 "--Online_folder_path", "${workspaceFolder}/Online_DataCollected",
-                "--Online_result_save_rootdir", "${workspaceFolder}/Online_simulation_experiments/method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_1_new_seed3407_1",
+                "--Online_result_save_rootdir", "${workspaceFolder}/Online_simulation_experiments/method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_3_new_seed3407_calibration",
                 //"--restore_file", "${workspaceFolder}/pretrained_weights/checkpoints_test_predict/checkpoints_test_encoder3_light/encoder_epoch_1.0.pt",
                 "--restore_file", "None",
                 "--n_epoch_offline", "32",

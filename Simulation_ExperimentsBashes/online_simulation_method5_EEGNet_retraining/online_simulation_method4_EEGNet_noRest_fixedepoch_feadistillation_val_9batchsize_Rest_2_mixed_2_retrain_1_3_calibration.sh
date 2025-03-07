@@ -10,7 +10,7 @@ workspace_folder="/home/jyt/workspace/MI_Online_Adjusting"
 cd $workspace_folder
 
 # 循环运行你的程序
-for i in $(seq 1 25)
+for i in $(seq 6 25)
 do
   sub_name=$(printf "%03d" $i)
   python3 $program_path \
