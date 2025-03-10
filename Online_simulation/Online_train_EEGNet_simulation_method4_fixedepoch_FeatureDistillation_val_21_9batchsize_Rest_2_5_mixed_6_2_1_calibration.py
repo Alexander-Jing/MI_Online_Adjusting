@@ -29,7 +29,7 @@ from helpers.utils import Offline_write_performance_info_FixedTrainValSplit, Off
 from Offline_synthesizing_results.synthesize_hypersearch_for_a_subject import synthesize_hypersearch_confusionMatrix
 from Online_simulation_synthesizing.Online_simulation_synthesizing_subjects import Online_simulation_synthesizing_results, Online_simulation_synthesizing_results_comparison,\
       Online_simulation_synthesizing_results_linear, Online_simulation_synthesizing_results_comparison_linear, Online_simulation_synthesizing_results_linear_perclass, Online_simulation_synthesizing_results_2cls_linear,\
-      Online_simulation_synthesizing_results_comparison_linear_2cls, Online_simulation_synthesizing_results_polynomial, Online_simulation_synthesizing_results_comparison_polynomial, Online_simulation_synthesizing_results_comparison_polynomial_optimized, Online_simulation_synthesizing_results_polynomial_avg, Online_simulation_synthesizing_results_polynomial_avgF1,Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass, Online_simulation_synthesizing_results_calibration_avg, Online_simulation_synthesizing_results_calibration_perclass
+      Online_simulation_synthesizing_results_comparison_linear_2cls, Online_simulation_synthesizing_results_polynomial, Online_simulation_synthesizing_results_comparison_polynomial, Online_simulation_synthesizing_results_comparison_polynomial_optimized, Online_simulation_synthesizing_results_polynomial_avg, Online_simulation_synthesizing_results_polynomial_avgF1,Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass, Online_simulation_synthesizing_results_calibration_avg, Online_simulation_synthesizing_results_calibration_perclass, Online_simulation_synthesizing_results_polynomial_avgF1_noRest, Online_simulation_synthesizing_results_polynomial_avgF1_Rest
 
 
 #for personal model, save the test prediction of each cv fold
@@ -63,7 +63,7 @@ def Offline_EEGNet_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=40, preprocess=preprocess_norm, proportion=proportion)
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=80, preprocess=preprocess_norm, proportion=proportion)
         
     #dataset object
     group_train_set = brain_dataset(sub_train_feature_array, sub_train_label_array)
@@ -216,7 +216,7 @@ def Online_updating_EEGNet_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=50, preprocess=preprocess_norm,\
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=90, preprocess=preprocess_norm,\
                                                                                                 proportion=proportion, batch_size_online=batch_size_online, \
                                                                                                     pattern=  [1, 2, 1, 2, 0, 0, 2, 2, 1, 1, 0, 0, 
                                                                                                                2, 1, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 
@@ -910,6 +910,8 @@ if __name__ == "__main__":
         Online_simulation_synthesizing_results_polynomial_avgF1(Online_result_save_rootdir)
         Online_simulation_synthesizing_results_calibration_avg(Online_result_save_rootdir)
         Online_simulation_synthesizing_results_calibration_perclass(Online_result_save_rootdir)
+        Online_simulation_synthesizing_results_polynomial_avgF1_noRest(Online_result_save_rootdir, data_session_avg=24*batch_size_online)
+        Online_simulation_synthesizing_results_polynomial_avgF1_Rest(Online_result_save_rootdir, data_session_avg=24*batch_size_online)
 
 
     if mode == 'comparison':
