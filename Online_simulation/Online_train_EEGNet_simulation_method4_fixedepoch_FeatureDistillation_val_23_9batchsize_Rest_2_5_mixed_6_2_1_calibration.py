@@ -29,7 +29,7 @@ from helpers.utils import Offline_write_performance_info_FixedTrainValSplit, Off
 from Offline_synthesizing_results.synthesize_hypersearch_for_a_subject import synthesize_hypersearch_confusionMatrix
 from Online_simulation_synthesizing.Online_simulation_synthesizing_subjects import Online_simulation_synthesizing_results, Online_simulation_synthesizing_results_comparison,\
       Online_simulation_synthesizing_results_linear, Online_simulation_synthesizing_results_comparison_linear, Online_simulation_synthesizing_results_linear_perclass, Online_simulation_synthesizing_results_2cls_linear,\
-      Online_simulation_synthesizing_results_comparison_linear_2cls, Online_simulation_synthesizing_results_polynomial, Online_simulation_synthesizing_results_comparison_polynomial, Online_simulation_synthesizing_results_comparison_polynomial_optimized, Online_simulation_synthesizing_results_polynomial_avg, Online_simulation_synthesizing_results_polynomial_avgF1,Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass, Online_simulation_synthesizing_results_calibration_avg, Online_simulation_synthesizing_results_calibration_perclass, Online_simulation_synthesizing_results_polynomial_avgF1_noRest, Online_simulation_synthesizing_results_polynomial_avgF1_Rest
+      Online_simulation_synthesizing_results_comparison_linear_2cls, Online_simulation_synthesizing_results_polynomial, Online_simulation_synthesizing_results_comparison_polynomial, Online_simulation_synthesizing_results_comparison_polynomial_optimized, Online_simulation_synthesizing_results_polynomial_avg, Online_simulation_synthesizing_results_polynomial_avgF1,Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass
 
 
 #for personal model, save the test prediction of each cv fold
@@ -110,7 +110,7 @@ def Offline_EEGNet_simulation(args_dict):
                 model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
             else:
                 model = EEGNetFea(feature_size=29, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
-            
+
             # reload weights from restore_file is specified
             if restore_file != 'None':
                 #restore_path = os.path.join(os.path.join(result_save_subject_checkpointdir, restore_file))
@@ -142,7 +142,7 @@ def Offline_EEGNet_simulation(args_dict):
                 epoch_validation_accuracy.append(val_accuracy)
 
                 #update is_best flag, only when the accuracies of two classes of motor imagery are larger than random choice
-                if accuracy_per_class[0] > 0.33 and accuracy_per_class[1] > 0.33 and accuracy_per_class[2] > 0.33:
+                if accuracy_per_class[1] > 0.33 and accuracy_per_class[2] > 0.33:
                     is_best = val_accuracy >= best_val_accuracy
 
                 if is_best:
@@ -240,7 +240,7 @@ def Online_updating_EEGNet_simulation(args_dict):
         model = EEGNetFea(feature_size=30, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
     else:
         model = EEGNetFea(feature_size=29, num_timesteps=512, num_classes=3, F1=8, D=2, F2=16, dropout=dropout)
-            
+
     #reload weights from restore_file is specified
     if restore_file != 'None':
         # move the best model from the offline experiments results
@@ -266,7 +266,7 @@ def Online_updating_EEGNet_simulation(args_dict):
     combined_label_array = []
     for label in unique_labels:
         indices = np.where(_combined_label_array == label)[0]
-        selected_indices = indices[:trial_pre]
+        selected_indices = indices[:80*3]
         sub_feature = _combined_feature_array[selected_indices]
         sub_label = _combined_label_array[selected_indices]
         combined_feature_array.append(sub_feature)
@@ -330,7 +330,7 @@ def Online_updating_EEGNet_simulation(args_dict):
                 # for old classes, generating the exemplars class
                 if label == 0.0:
                     indices = np.where(combined_label_array == label)[0]
-                    selected_indices_exemplars = indices
+                    selected_indices_exemplars = indices[-trial_pre: ]  # in this incremental setting, only the data with size trial_pre will be included for updating
                     sub_train_feature_exemplars = combined_feature_array[selected_indices_exemplars]
                     sub_train_label_exemplars = combined_label_array[selected_indices_exemplars]
                     _sub_exemplars = brain_dataset(sub_train_feature_exemplars, sub_train_label_exemplars)
@@ -339,7 +339,7 @@ def Online_updating_EEGNet_simulation(args_dict):
 
                 if label == 1.0:
                     indices = np.where(combined_label_array == label)[0]
-                    selected_indices_exemplars = indices
+                    selected_indices_exemplars = indices[-trial_pre: ]  # in this incremental setting, only the data with size trial_pre will be included for updating
                     sub_train_feature_exemplars = combined_feature_array[selected_indices_exemplars]
                     sub_train_label_exemplars = combined_label_array[selected_indices_exemplars]
                     _sub_exemplars = brain_dataset(sub_train_feature_exemplars, sub_train_label_exemplars)
@@ -348,7 +348,7 @@ def Online_updating_EEGNet_simulation(args_dict):
                      
                 if label == 2.0:
                     indices = np.where(combined_label_array == label)[0]
-                    selected_indices_exemplars = indices
+                    selected_indices_exemplars = indices[-trial_pre: ]  # in this incremental setting, only the data with size trial_pre will be included for updating
                     sub_train_feature_exemplars = combined_feature_array[selected_indices_exemplars]
                     sub_train_label_exemplars = combined_label_array[selected_indices_exemplars]
                     _sub_exemplars = brain_dataset(sub_train_feature_exemplars, sub_train_label_exemplars)
@@ -443,7 +443,8 @@ def Online_updating_EEGNet_simulation(args_dict):
 
             for label in unique_labels:
                 indices = np.where(combined_label_array == label)[0]
-                
+                indices = indices[-(trial_pre + int(_update_wholeModel/2)*batch_size_online):]  # for faster training, only using part of the existing data 
+
                 if label != 0:
                     #print("MI label: ", label)
                     target_indices = indices[-int(_update_wholeModel/2)*batch_size_online:]
@@ -908,11 +909,6 @@ if __name__ == "__main__":
         #Online_simulation_synthesizing_results_2cls_linear(Online_result_save_rootdir)
         Online_simulation_synthesizing_results_linear_perclass(Online_result_save_rootdir)
         Online_simulation_synthesizing_results_polynomial_avgF1(Online_result_save_rootdir)
-        Online_simulation_synthesizing_results_calibration_avg(Online_result_save_rootdir)
-        Online_simulation_synthesizing_results_calibration_perclass(Online_result_save_rootdir)
-        Online_simulation_synthesizing_results_polynomial_avgF1_noRest(Online_result_save_rootdir, data_session_avg=24*batch_size_online)
-        Online_simulation_synthesizing_results_polynomial_avgF1_Rest(Online_result_save_rootdir, data_session_avg=24*batch_size_online)
-
 
     if mode == 'comparison':
         methods = ['baseline1_EEGNet_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_new', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new', 'method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new', 'method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new' ,'method4_EEGNet_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_2_mixed_4_new', 'method4_EEGNet_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_2_mixed_4_new']
