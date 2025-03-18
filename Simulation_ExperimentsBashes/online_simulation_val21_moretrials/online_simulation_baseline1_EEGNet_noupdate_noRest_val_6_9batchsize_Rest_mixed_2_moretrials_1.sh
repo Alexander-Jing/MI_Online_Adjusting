@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 你的程序的路径
-program_path="Online_simulation/Online_train_EEGNet_simulation_baseline1_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_noupdate.py"
+program_path="Online_simulation/Online_train_EEGNet_simulation_baseline1_noupdate_noRest_val_6_9batchsize_Rest_mixed_2_noupdate_200.py"
 
 # 你的工作目录的路径
 workspace_folder="/home/jyt/workspace/MI_Online_Adjusting"

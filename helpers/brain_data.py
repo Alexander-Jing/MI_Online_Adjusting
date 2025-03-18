@@ -834,6 +834,112 @@ def Online_simulation_read_csv_windows_preprocess_normalization(folder_path, sub
     return sub_train_feature_array, sub_train_label_array.astype(int), sub_val_feature_array, sub_val_label_array.astype(int), \
         sub_train_feature_array_1, sub_train_label_array_1.astype(int)
 
+def Online_simulation_read_csv_windows_preprocess_normalization_part(folder_path, sub_file, trial_pre_1, trial_pre_2, preprocess=True, max_scale=128-(-128), old_freq=200, new_freq=256,\
+                                       channel_list=CHANNEL_LIST, target_channel_list=EEG_20_DIV_32, proportion=0.8,\
+                                        window_size = 512, step_size = 256, window_per_trial = 3, batch_size_online=4, normalize=False,\
+                                            pattern = [0, 1, 2,  0, 2, 1,  1, 0, 2,  1, 2, 0,  2, 0, 1,  2, 1, 0]):
+    # 读取.mat文件
+    mat = sio.loadmat(os.path.join(folder_path, 'sub-' + sub_file, 'eeg', 'sub-' + sub_file + '_task-motorimagery_eeg.mat'))
+    
+    # 提取数据
+    task_data = mat['task_data'].reshape(-1, 62, 800)
+    task_label = mat['task_label'].reshape(-1, 1)
+    rest_data = mat['rest_data'].reshape(-1, 62, 800)
+
+    # 预处理数据
+    task_data,eeg_data_max, eeg_data_min = preprocess_eeg_data_Norm(task_data, channel_list, target_channel_list, Norm=preprocess, max_scale=max_scale, old_freq=old_freq, new_freq=new_freq)
+    rest_data,eeg_data_max_, eeg_data_min_ = preprocess_eeg_data_Norm(rest_data, channel_list, target_channel_list, Norm=preprocess, max_scale=max_scale, old_freq=old_freq, new_freq=new_freq)
+
+    # 提取类别为1和2的前trial_pre个trial的数据
+    task_data_pre_1 = task_data[task_label[:, 0] == 1][trial_pre_1:trial_pre_2]
+    task_data_pre_2 = task_data[task_label[:, 0] == 2][trial_pre_1:trial_pre_2]
+    task_label_pre_1 = task_label[task_label[:, 0] == 1][trial_pre_1:trial_pre_2]
+    task_label_pre_2 = task_label[task_label[:, 0] == 2][trial_pre_1:trial_pre_2]
+    
+    # 构成数据集
+    sub_train_feature_array = np.concatenate((task_data_pre_1, task_data_pre_2, rest_data[trial_pre_1:trial_pre_2]), axis=0)
+    sub_train_label_array = np.concatenate((task_label_pre_1, task_label_pre_2, np.zeros((int(trial_pre_2-trial_pre_1), 1))), axis=0)
+    
+
+    # 剩下的数据
+    task_data_rest_1 = task_data[task_label[:, 0] == 1][trial_pre_2:]
+    task_data_rest_2 = task_data[task_label[:, 0] == 2][trial_pre_2:]
+    task_label_rest_1 = task_label[task_label[:, 0] == 1][trial_pre_2:]
+    task_label_rest_2 = task_label[task_label[:, 0] == 2][trial_pre_2:]
+    rest_data_rest = rest_data[trial_pre_2:]
+    
+    sub_train_feature_array_1 = np.concatenate((task_data_rest_1, task_data_rest_2, rest_data_rest), axis=0)
+    sub_train_label_array_1 = np.concatenate((task_label_rest_1, task_label_rest_2, np.zeros((len(rest_data_rest), 1))), axis=0)
+
+    # 使用滑窗增广数据
+    sub_train_feature_array = sliding_window_modified(sub_train_feature_array, window_size, step_size)
+    #sub_train_feature_array = sub_train_feature_array.reshape(-1, sub_train_feature_array.shape[1], sub_train_feature_array.shape[3])
+
+    sub_train_label_array = np.repeat(sub_train_label_array, sub_train_feature_array.shape[0] // len(sub_train_label_array))
+    #sub_val_feature_array = sliding_window(sub_val_feature_array, window_size, step_size)
+    #sub_val_label_array = np.repeat(sub_val_label_array, sub_val_feature_array.shape[0] // len(sub_val_label_array))
+    sub_train_feature_array_1 = sliding_window_modified(sub_train_feature_array_1, window_size, step_size)
+    #sub_train_feature_array_1 = sub_train_feature_array_1.reshape(-1, sub_train_feature_array_1.shape[1], sub_train_feature_array_1.shape[3])
+
+    sub_train_label_array_1 = np.repeat(sub_train_label_array_1, sub_train_feature_array_1.shape[0] // len(sub_train_label_array_1))
+
+    sub_train_feature_array_backup = sub_train_feature_array.copy()
+    sub_train_feature_array_1_backup = sub_train_feature_array_1.copy()
+
+    # temporal normalization 
+    if normalize:
+        sub_train_feature_array = TemporalNormalization(sub_train_feature_array)
+        sub_train_feature_array_1 = TemporalNormalization(sub_train_feature_array_1)
+
+    # 重新排列数据
+    # 获取每个类别的索引
+    indices_0 = np.where(sub_train_label_array_1 == 0)[0]
+    indices_1 = np.where(sub_train_label_array_1 == 1)[0]
+    indices_2 = np.where(sub_train_label_array_1 == 2)[0]
+
+    # 创建新的索引数组
+    new_indices = []
+    
+    # 按照顺序每次添加batch_size_online个样本用于在线更新
+    for i in range(len(sub_train_label_array_1) // (len(pattern) * batch_size_online)):
+        for j in pattern:
+            if j == 0 and len(indices_0) >= batch_size_online:
+                new_indices.extend(indices_0[:batch_size_online])
+                indices_0 = indices_0[batch_size_online:]
+            elif j == 1 and len(indices_1) >= batch_size_online:
+                new_indices.extend(indices_1[:batch_size_online])
+                indices_1 = indices_1[batch_size_online:]
+            elif j == 2 and len(indices_2) >= batch_size_online:
+                new_indices.extend(indices_2[:batch_size_online])
+                indices_2 = indices_2[batch_size_online:]
+    
+    # 使用新的索引数组重新排列 sub_train_feature_array_1 和 sub_train_label_array_1
+    sub_train_feature_array_1 = sub_train_feature_array_1[new_indices]
+    sub_train_label_array_1 = sub_train_label_array_1[new_indices]
+
+    # 将原来的训练集以proportion的比例拆分为新的训练集和验证集
+    unique_labels = np.unique(sub_train_label_array)
+    sub_train_feature_list = []
+    sub_train_label_list = []
+    sub_val_feature_list = []
+    sub_val_label_list = []
+    for label in unique_labels:
+        indices = np.where(sub_train_label_array == label)[0]
+        split_index = int(proportion * len(indices))
+        # because of the online windows, the situation that windows from the same trial both in training and validation set should be avoided
+        split_index_trial = window_per_trial * (split_index // window_per_trial)  
+        sub_train_feature_list.append(sub_train_feature_array[indices[:split_index_trial]])
+        sub_train_label_list.append(sub_train_label_array[indices[:split_index_trial]])
+        sub_val_feature_list.append(sub_train_feature_array[indices[split_index_trial:]])
+        sub_val_label_list.append(sub_train_label_array[indices[split_index_trial:]])
+    sub_train_feature_array = np.concatenate(sub_train_feature_list, axis=0)
+    sub_train_label_array = np.concatenate(sub_train_label_list, axis=0)
+    sub_val_feature_array = np.concatenate(sub_val_feature_list, axis=0)
+    sub_val_label_array = np.concatenate(sub_val_label_list, axis=0)
+
+    return sub_train_feature_array, sub_train_label_array.astype(int), sub_val_feature_array, sub_val_label_array.astype(int), \
+        sub_train_feature_array_1, sub_train_label_array_1.astype(int)
+
 def Online_simulation_read_csv_windows_preprocess_normalization_1(folder_path, sub_file, trial_pre, preprocess=True, max_scale=128-(-128), old_freq=200, new_freq=256,\
                                        channel_list=CHANNEL_LIST, target_channel_list=EEG_20_DIV_32, proportion=0.8,\
                                         window_size = 512, step_size = 256, batch_size_online=4, normalize=False,\

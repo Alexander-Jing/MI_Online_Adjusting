@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from helpers.models import EEGNetFea, ConvEncoderResBN, ConvEncoder3ResBN, ConvEncoderCls, ConvEncoderClsFea, ResEncoderfinetune, ConvEncoder3_ClsFeaTL, ConvEncoder_OutputClsFeaTL, ConvEncoder_OutputClsHeavyFeaTL
-from helpers.brain_data import Offline_read_csv, brain_dataset, Online_read_csv, Online_simulation_read_csv, Online_simulation_read_csv_windows_preprocess_normalization
+from helpers.brain_data import Offline_read_csv, brain_dataset, Online_read_csv, Online_simulation_read_csv, Online_simulation_read_csv_windows_preprocess_normalization_part
 from helpers.utils import seed_everything, makedir_if_not_exist, plot_confusion_matrix, \
     save_pickle, train_one_epoch, train_one_epoch_fea, train_update, eval_model, eval_model_fea, train_one_epoch_MMD, save_training_curves_FixedTrainValSplit, \
         write_performance_info_FixedTrainValSplit, write_program_time, eval_model_confusion_matrix_fea, train_one_epoch_MMDavg, write_inference_time
@@ -63,7 +63,7 @@ def Offline_EEGNet_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=80, preprocess=preprocess_norm, proportion=proportion)
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization_part(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre_1=100, trial_pre_2=200, preprocess=preprocess_norm, proportion=proportion)
         
     #dataset object
     group_train_set = brain_dataset(sub_train_feature_array, sub_train_label_array)
@@ -216,7 +216,7 @@ def Online_updating_EEGNet_simulation(args_dict):
         device = torch.device('cpu')
     
     sub_train_feature_array, sub_train_label_array, sub_val_feature_array, sub_val_label_array, \
-        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre=50, preprocess=preprocess_norm,\
+        sub_train_feature_array_1, sub_train_label_array_1 = Online_simulation_read_csv_windows_preprocess_normalization_part(folder_path=Offline_folder_path, sub_file=sub_name, trial_pre_1=100, trial_pre_2=200, preprocess=preprocess_norm,\
                                                                                                 proportion=proportion, batch_size_online=batch_size_online, \
                                                                                                     pattern=  [1, 2, 1, 2, 0, 0, 2, 2, 1, 1, 0, 0, 
                                                                                                                2, 1, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, 
@@ -266,7 +266,7 @@ def Online_updating_EEGNet_simulation(args_dict):
     combined_label_array = []
     for label in unique_labels:
         indices = np.where(_combined_label_array == label)[0]
-        selected_indices = indices[:40*3]
+        selected_indices = indices[:100*3]
         sub_feature = _combined_feature_array[selected_indices]
         sub_label = _combined_label_array[selected_indices]
         combined_feature_array.append(sub_feature)
