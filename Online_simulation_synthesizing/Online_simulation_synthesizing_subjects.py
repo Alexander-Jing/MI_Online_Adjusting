@@ -211,7 +211,7 @@ def Online_simulation_synthesizing_results_polynomial(Online_result_save_rootdir
     plt.close()
 
 """
-def Online_simulation_synthesizing_results_polynomial(Online_result_save_rootdir, random_acc=33.0):
+def Online_simulation_synthesizing_results_polynomial(Online_result_save_rootdir, random_acc=33.3):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
 
@@ -271,7 +271,7 @@ def Online_simulation_synthesizing_results_polynomial(Online_result_save_rootdir
     plt.savefig(f'{Online_result_save_rootdir}/synthesizing_results_subjects_polynomial.png')
     plt.close()
 
-def Online_simulation_synthesizing_results_polynomial_avg(Online_result_save_rootdir, random_acc=33.0, data_session_avg=24):
+def Online_simulation_synthesizing_results_polynomial_avg(Online_result_save_rootdir, random_acc=33.3, data_session_avg=24):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
     all_data_avg = []
@@ -412,7 +412,7 @@ def Online_simulation_synthesizing_results_calibration_perclass(Online_result_sa
     
     plot_calibration_histogram_per_class_avg(np.array(labels_arrays), probabilities_arrays, Online_result_save_rootdir, temperature=temperature, n_bins=10)
 
-def Online_simulation_synthesizing_results_polynomial_avg_1(Online_result_save_rootdir, random_acc=33.0, data_session_avg=24):
+def Online_simulation_synthesizing_results_polynomial_avg_1(Online_result_save_rootdir, random_acc=33.3, data_session_avg=24):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
     all_data_avg = []
@@ -546,7 +546,7 @@ def Online_simulation_synthesizing_results_calibration_perclass_1(Online_result_
     plot_calibration_histogram_per_class_avg(np.array(labels_arrays), probabilities_arrays, Online_result_save_rootdir, temperature=temperature, n_bins=10)
 
 
-def Online_simulation_synthesizing_results_polynomial_avgF1(Online_result_save_rootdir, random_acc=33.0, data_session_avg=24*9, pattern=[0,0,0,0]):
+def Online_simulation_synthesizing_results_polynomial_avgF1(Online_result_save_rootdir, random_acc=33.3, data_session_avg=24*9, pattern=[0,0,0,0]):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
     all_data_avg = []
@@ -622,7 +622,7 @@ def Online_simulation_synthesizing_results_polynomial_avgF1(Online_result_save_r
     
     all_data_avg_df.to_csv(f'{Online_result_save_rootdir}/all_data_avg.csv', index_label='sub')
 
-def Online_simulation_synthesizing_results_polynomial_avgF1_noRest(Online_result_save_rootdir, noRest=True, random_acc=33.0, data_session_avg=24*9, pattern=[0,0,0,0]):
+def Online_simulation_synthesizing_results_polynomial_avgF1_noRest(Online_result_save_rootdir, noRest=True, random_acc=33.3, data_session_avg=24*9, pattern=[0,0,0,0]):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
     all_data_avg = []
@@ -706,7 +706,7 @@ def Online_simulation_synthesizing_results_polynomial_avgF1_noRest(Online_result
     }, index=['acc_avg_former', 'acc_avg_latter', 'f1_avg_former', 'f1_avg_latter'])
     results_df.to_csv(f'{Online_result_save_rootdir}/all_data_avg_results_noRest.csv')
 
-def Online_simulation_synthesizing_results_polynomial_avgF1_Rest(Online_result_save_rootdir, Rest=True, random_acc=33.0, data_session_avg=24*9, pattern=[0,0,0,0]):
+def Online_simulation_synthesizing_results_polynomial_avgF1_Rest(Online_result_save_rootdir, Rest=True, random_acc=33.3, data_session_avg=24*9, pattern=[0,0,0,0]):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
     all_data_avg = []
@@ -791,7 +791,7 @@ def Online_simulation_synthesizing_results_polynomial_avgF1_Rest(Online_result_s
     results_df.to_csv(f'{Online_result_save_rootdir}/all_data_avg_results_Rest.csv')
 
 
-def Online_simulation_synthesizing_results_polynomial_avgF1_noRest_1(Online_result_save_rootdir, noRest=True, random_acc=33.0, data_session_avg=24*9, pattern=[0,0,0,0]):
+def Online_simulation_synthesizing_results_polynomial_avgF1_noRest_1(Online_result_save_rootdir, noRest=True, random_acc=33.3, data_session_avg=24*9, pattern=[0,0,0,0]):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
     all_data_avg = []
@@ -876,7 +876,7 @@ def Online_simulation_synthesizing_results_polynomial_avgF1_noRest_1(Online_resu
     results_df.to_csv(f'{Online_result_save_rootdir}/all_data_avg_results_noRest.csv')
     
 
-def Online_simulation_synthesizing_results_polynomial_avgF1_1(Online_result_save_rootdir, random_acc=33.0, data_session_avg=24*9, pattern=[0,0,0,0]):
+def Online_simulation_synthesizing_results_polynomial_avgF1_1(Online_result_save_rootdir, random_acc=33.3, data_session_avg=24*9, pattern=[0,0,0,0]):
     # 初始化一个空的列表来存储所有被试的数据
     all_data = []
     all_data_avg = []
@@ -1224,7 +1224,7 @@ def Online_simulation_synthesizing_results_comparison_linear_2cls(Online_result_
     plt.savefig(f'{Online_result_save_rootdir}/synthesizing_results_subjects_comparison_cls2.png')
     plt.close()
 
-def Online_simulation_synthesizing_results_comparison_polynomial(Online_result_save_rootdir, methods, random_acc=33.0):
+def Online_simulation_synthesizing_results_comparison_polynomial(Online_result_save_rootdir, methods, random_acc=33.3):
     
     # 设置图形大小
     plt.figure(figsize=(16, 9))
@@ -1269,7 +1269,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial(Online_result_s
     plt.close()
 
 
-def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=28.0, upper=68.0, retrain_method='Model retraining'):
+def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.3, lower=28.0, upper=68.0, retrain_method='Model retraining'):
     
     matplotlib.rcParams["font.family"] = "Times New Roman"
     # 设置图形大小
@@ -1351,7 +1351,7 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
         return 'No updating','#386fb7'
     if method=='method5_encoder3_pretrainlight_baseline_1_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_1_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_1_1_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_3' or method=='method5_EEGNet_baseline_1_3_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4_seed3407' or method=='method5_EEGNet_baseline_1_2_9batchsize_Rest_2_mixed_3_new_4_seed3407_moretrials_200':
         # return "Lin's",'#E0802A'
-        return "Real-time finetuning",'#E0802A'
+        return "Real-time fine-tuning",'#E0802A'
         # return "Model finetuning",'#E0802A'
     if method=='method5_encoder3_pretrainlight_baseline_2_4_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_6_9batchsize_Rest_2_mixed_3' or method=='method5_encoder3_pretrainlight_baseline_2_7_9batchsize_Rest_2_mixed_3' or method=='method5_EEGNet_baseline_2_7_9batchsize_Rest_2_mixed_3_new' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_2' or method=='method5_EEGNet_baseline_2_8_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1_1' or method=='method5_EEGNet_baseline_2_9_9batchsize_Rest_2_mixed_3_new_1_3407_1_1':
         # return "Wang's",'#3b9144'
@@ -1398,8 +1398,8 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
                                                                                                                                         or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1'\
                                                                                                                                             or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1_seed3407'\
                                                                                                                                                 or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_21_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_3_1_seed3407_moretrials_200':
-        # return "Ours (all)",'#C23D3E'
-        return "C-GOAL (all)",'#C23D3E'
+        return "Ours",'#C23D3E'
+        # return "C-GOAL (all)",'#C23D3E'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_8_mixed_4' \
         or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_13_9batchsize_Rest_2_lessepoch_1_2_mixed_4_new'\
                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_19_9batchsize_Rest_2_2_1_mixed_4_new'\
@@ -1407,12 +1407,12 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
                             or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2'\
                                 or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_22_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1'\
                                     or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_23_9batchsize_Rest_2_lessepoch_1_8_mixed_7_new_3_2_1':
-        # return "Ours (incremental)",'#9273B2'
-        return "C-GOAL (incremental)",'#9273B2'
+        return "Ours (incremental)",'#9273B2'
+        # return "C-GOAL (incremental)",'#9273B2'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_new' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1_3_new_seed3407':
         return "Model retraining",'#3852A4'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_3' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune_2' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune_1' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_finetune' or method=='method4_EEGNet_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_new_1':
-        return "Model finetuning",'#838482'
+        return "Model fine-tuning",'#838482'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_lessdata':
         return "Ours (less data)", '#AF5A76'
     if method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_3_scratch_focal' or method=='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_14_9batchsize_Rest_2_lessepoch_1_6_mixed_3_scratch':
@@ -1438,7 +1438,7 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
 # 设置seaborn样式
 sns.set_theme(style="darkgrid")
 
-def Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=30.0, upper=60.0, \
+def Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.3, lower=30.0, upper=60.0, \
                                                                                     retrain_method='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1', \
                                                                                         row=2, col=3, img_name='synthesizing_results_subjects_comparison_polynomial_optimized_perclass'):
     
@@ -1521,6 +1521,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
     # 减小白边
     plt.tight_layout()
     plt.subplots_adjust(bottom=0.13)  # 可能需要根据实际情况调整这个值
+    # plt.subplots_adjust(bottom=0.20)  # 可能需要根据实际情况调整这个值
     # 调整下右边距
     plt.subplots_adjust(right=0.95)
 
@@ -1530,7 +1531,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
     plt.close()  
 
 
-def Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass_ablation(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.0, lower=30.0, upper=60.0, \
+def Online_simulation_synthesizing_results_comparison_polynomial_optimized_perclass_ablation(Online_result_save_rootdir, methods, std_weight=0.40, random_acc=33.3, lower=30.0, upper=60.0, \
                                                                                     retrain_method='method4_encoder3_pretrainlight_fixedepoch_FeatureDistillation_val_9batchsize_Rest_2_mixed_retrain_1', \
                                                                                         row=1, col=3, img_name='synthesizing_results_subjects_comparison_polynomial_optimized_perclass_ablation'):
     
