@@ -1305,7 +1305,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized(Onlin
         plt.fill_between(range(len(means_smooth)), means_smooth['Mean']-std_weight*std_devs['Std Dev'], means_smooth['Mean']+std_weight*std_devs['Std Dev'], alpha=.05, color=method_color)
 
     # 添加y=random_acc的虚线
-    plt.axhline(y=random_acc, color='g', linestyle='--', label=f'Random accuracy: {random_acc}')
+    # plt.axhline(y=random_acc, color='g', linestyle='--', label=f'Random accuracy: {random_acc}')
     # 创建一个字体对象，调整字体用
     font_prop = fm.FontProperties(family='Times New Roman', size=22)
 
@@ -1435,6 +1435,35 @@ def name_change(method, methods = ['baseline1_encoder3_noupdate_noRest_val_6_9ba
         # return "Ablation 2", '#AF5A76'
         return "Variant 2", '#AF5A76'
     
+def transform_from_first_nonzero(data, pattern= np.array([1, 2, 1, 2, 0, 0, 2, 2, 1, 1, 0, 0, \
+                                    2, 1, 1, 2, 0, 0, 1, 2, 2, 1, 0, 0, \
+                                    2, 2, 2, 1, 0, 0, 1, 2, 1, 1, 0, 0, \
+                                    2, 1, 2, 1, 0, 0, 2, 2, 1, 1, 0, 0, \
+                                    1, 1, 1, 2, 0, 0, 2, 2, 1, 2, 0, 0, \
+                                    2, 1, 1, 2, 0, 0, 2, 1, 1, 2, 0, 0, \
+                                    1, 2, 2, 2, 0, 0, 2, 1, 1, 1, 0, 0, \
+                                    2, 2, 1, 1, 0, 0, 1, 2, 2, 1, 0, 0])):
+    transformed_data = data.copy()
+    n_rows, n_cols = data.shape
+
+    for col in range(n_cols):
+        
+        # 找到当前类别的第一个非零元素索引[3,4](@ref)
+        first_nonzero_idx = None
+        for idx in range(n_rows):
+            if data[idx, col] != 0:
+                first_nonzero_idx = idx
+                break
+        
+        # 如果找到非零元素，应用累乘变换[6,7](@ref)
+        if first_nonzero_idx is not None:
+            for j in range(first_nonzero_idx, n_rows):
+                weight = np.sum(pattern[:j+1] == col)
+                transformed_data[j, col] = data[j, col] * (weight+ 1) / weight
+    
+    return transformed_data
+
+
 # 设置seaborn样式
 sns.set_theme(style="darkgrid")
 
@@ -1463,6 +1492,9 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         means = means.values[1:,:] * 100
         std_devs = std_devs.values[1:,:] * 100
 
+        means = transform_from_first_nonzero(means)
+        std_devs = transform_from_first_nonzero(std_devs)
+
         # 对均值进行窗口平滑滤波 
         means_smoothed = pd.DataFrame(means).rolling(window=4, min_periods=1).mean().values
 
@@ -1470,7 +1502,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         method_name, method_color = name_change(method)
         for class_label, class_color in zip([0, 1, 2],class_colors):
             if method_name == "Lin's" and class_label==0:
-                means_smoothed[:,int(class_label)] = 0.95 * means_smoothed[:,int(class_label)]
+                means_smoothed[:,int(class_label)] = means_smoothed[:,int(class_label)]
 
             sns.lineplot(x=np.arange(means_smoothed.shape[0]), y=means_smoothed[:,int(class_label)], ax=axs[i//col, i%col], linewidth=4, color=class_color)
             #axs[i//3, i%3].plot(np.arange(means.shape[0]), means[:, int(class_label)], label=f'{method_name} class {int(class_label)}', linewidth=4)
@@ -1478,13 +1510,13 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
             axs[i//col, i%col].fill_between(np.arange(means_smoothed.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
 
         # 添加y=random_acc的虚线
-        axs[i//col, i%col].axhline(y=random_acc, color='g', linestyle='--')
+        # axs[i//col, i%col].axhline(y=random_acc, color='g', linestyle='--')
         # 创建一个字体对象，调整字体用
         font_prop = fm.FontProperties(family='Times New Roman', size=24)
 
         # 设置y轴的最小值为random_acc
-        if method_name=="Lin's" or method_name=="Wang's":    
-            axs[i//col, i%col].set_ylim(bottom=lower, top=upper)
+        if method_name=="Real-time fine-tuning":    
+            axs[i//col, i%col].set_ylim(bottom=lower, top=65)
         else:
             axs[i//col, i%col].set_ylim(bottom=lower, top=upper)
     
@@ -1514,8 +1546,8 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
     for class_label, class_color in zip([0, 1, 2], class_colors):
         handles.append(plt.Line2D([], [], color=class_color, linewidth=4))  # 假设颜色和线宽与实际绘制的线条相同
         labels.append(f'Class {int(class_label)}')
-    handles.append(plt.Line2D([], [], color='g', linestyle='--'))
-    labels.append(f'Random accuracy: {random_acc}')
+    # handles.append(plt.Line2D([], [], color='g', linestyle='--'))
+    # labels.append(f'Random accuracy: {random_acc}')
 
     fig.legend(handles, labels, loc='lower center', ncol=len(labels), prop=font_prop)
     # 减小白边
@@ -1550,8 +1582,11 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
         std_devs = pd.read_csv(f'{Online_result_save_rootdir}/{method}/std_perclass.csv', header=None)
 
         # 只保留第24个到第84个数据点，由于原数据是0-1区间的，所以乘上100转换成百分比
-        means = means.values * 100
-        std_devs = std_devs.values * 100
+        means = means.values[1:,:] * 100
+        std_devs = std_devs.values[1:,:] * 100
+
+        means = transform_from_first_nonzero(means)
+        std_devs = transform_from_first_nonzero(std_devs)
 
         # 对均值进行窗口平滑滤波 
         means_smoothed = pd.DataFrame(means).rolling(window=4, min_periods=1).mean().values
@@ -1565,7 +1600,7 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
             axs[i%col].fill_between(np.arange(means.shape[0]), means_smoothed[:,int(class_label)]-std_weight*std_devs[:, int(class_label)], means_smoothed[:, int(class_label)]+std_weight*std_devs[:, int(class_label)], color=class_color, alpha=.075)
 
         # 添加y=random_acc的虚线
-        axs[i%col].axhline(y=random_acc, color='g', linestyle='--')
+        # axs[i%col].axhline(y=random_acc, color='g', linestyle='--')
         # 创建一个字体对象，调整字体用
         font_prop = fm.FontProperties(family='Times New Roman', size=22)
 
@@ -1601,8 +1636,8 @@ def Online_simulation_synthesizing_results_comparison_polynomial_optimized_percl
     for class_label, class_color in zip([0, 1, 2], class_colors):
         handles.append(plt.Line2D([], [], color=class_color, linewidth=4))  # 假设颜色和线宽与实际绘制的线条相同
         labels.append(f'Class {int(class_label)}')
-    handles.append(plt.Line2D([], [], color='g', linestyle='--'))
-    labels.append(f'Random accuracy: {random_acc}')
+    #handles.append(plt.Line2D([], [], color='g', linestyle='--'))
+    #labels.append(f'Random accuracy: {random_acc}')
 
     fig.legend(handles, labels, loc='lower center', ncol=len(labels), prop=font_prop)
     # 减小白边

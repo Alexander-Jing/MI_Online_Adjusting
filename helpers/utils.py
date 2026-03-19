@@ -671,7 +671,7 @@ def train_one_epoch_fea_MMDContrastive_targetcls(model, optimizer, criterion, so
     average_loss_this_epoch = loss_avg()
     return average_loss_this_epoch
 
-def train_one_epoch_fea_MMDContrastive_targetcls_iter(model, optimizer, criterion, source_loader, target_loader, memoryBank_source, memoryBank_target, device, cons_beta=0.01):
+def train_one_epoch_fea_MMDContrastive_targetcls_iter(model, optimizer, criterion, source_loader, target_loader, memoryBank_source, memoryBank_target, device, cons_beta=0.01, tau=1):
     # based on the contrastive learning based method in:
     # D. Zhang, H. Li and J. Xie, Unsupervised and semi-supervised domain adaptation networks considering both global knowledge and prototype-based local class information for Motor Imagery Classification. Neural Networks (2024), doi: https://doi.org/10.1016/j.neunet.2024.106497. 
     
@@ -712,10 +712,10 @@ def train_one_epoch_fea_MMDContrastive_targetcls_iter(model, optimizer, criterio
 
         # calculate the Source contrastive loss
         _source_innerdot = torch.einsum('bct,nct->bn', source_features, memoryBank_source)
-        source_cons_loss = criterion(_source_innerdot, source_labels)
+        source_cons_loss = criterion(_source_innerdot / tau, source_labels)
         # calculate the Interactive contrastive loss for the Target
         _target_innerdot = torch.einsum('bct,nct->bn', target_features, memoryBank_source)
-        target_cons_loss = criterion(_target_innerdot, target_labels)
+        target_cons_loss = criterion(_target_innerdot / tau, target_labels)
 
         # Total loss is the sum of classification loss and MMD loss
         #loss = cls_loss + mmd_loss + source_cons_loss + target_cons_loss

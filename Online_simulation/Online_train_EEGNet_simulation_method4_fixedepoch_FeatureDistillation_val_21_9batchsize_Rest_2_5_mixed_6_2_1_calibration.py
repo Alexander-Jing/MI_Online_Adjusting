@@ -204,6 +204,8 @@ def Online_updating_EEGNet_simulation(args_dict):
     update_wholeModel = args_dict.update_wholeModel
     para_m = args_dict.para_m
     cons_rate = args_dict.cons_rate
+    T_distil = args_dict.T_distil
+    tau_cons = args_dict.tau_cons
 
     #GPU setting
     cuda = torch.cuda.is_available()
@@ -568,7 +570,7 @@ def Online_updating_EEGNet_simulation(args_dict):
             for epoch in trange(_n_epoch_online, desc='online classification update'):
                 
                 #average_loss_this_epoch = train_one_epoch_label_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalabels_distill_loader, device, T=2.0, alpha=alpha_distill)
-                average_loss_this_epoch = train_one_epoch_logitlabel_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalogits_distill_loader, sub_oldclass_datalabels_distill_loader, device, T=2.0, alpha=alpha_distill)
+                average_loss_this_epoch = train_one_epoch_logitlabel_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalogits_distill_loader, sub_oldclass_datalabels_distill_loader, device, T=T_distil, alpha=alpha_distill)
                 #average_loss_this_epoch = train_one_epoch_logit_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalogits_distill_loader, device, T=2, alpha=alpha_distill)
                 #average_loss_this_epoch = train_one_epoch_fealogitlabel_distillation(model, optimizer, criterion, sub_newdata_datalabel_loader, sub_oldclass_datalogits_distill_loader, sub_oldclass_datalabels_distill_loader,\
                 #                                                                     sub_oldclass_datafea_distill_loader, sub_newclass_fealabel_distill_loader, sub_newdata_datalabel_loader, device, T=2.0, alpha=alpha_distill)
@@ -630,7 +632,7 @@ def Online_updating_EEGNet_simulation(args_dict):
                     memoryBank_source, memoryBank_target = eval_model_fea_classPrototypes(model, source_train_loader, target_train_loader, device, classes=3)    
                 
                     #average_loss_this_epoch = train_one_epoch_fea(model, optimizer, criterion, source_train_loader, device)
-                    average_loss_this_epoch = train_one_epoch_fea_MMDContrastive_targetcls_iter(model, optimizer, criterion, source_train_loader, target_train_loader, memoryBank_source, memoryBank_target, device, cons_beta=cons_rate)
+                    average_loss_this_epoch = train_one_epoch_fea_MMDContrastive_targetcls_iter(model, optimizer, criterion, source_train_loader, target_train_loader, memoryBank_source, memoryBank_target, device, cons_beta=cons_rate, tau=tau_cons)
                     whole_model_val_accuracy, _, _, _, _, whole_model_accuracy_per_class = eval_model_confusion_matrix_fea(model, target_train_loader, device)
                     whole_model_train_accuracy, _, _ , _ = eval_model_fea(model, source_train_loader, device)
                     
@@ -782,6 +784,8 @@ if __name__ == "__main__":
     parser.add_argument('--best_validation_path', default='lr0.001_dropout0.5', type=str, help="path of the best validation performance model")
     parser.add_argument('--unfreeze_encoder_offline', default=False, type=str2bool, help="whether to unfreeze the encoder params during offline training process")
     parser.add_argument('--unfreeze_encoder_online', default=False, type=str2bool, help="whether to unfreeze the encoder params during online training process")
+    parser.add_argument('--T_distil', default=2, type=float, help="the temperature for distillation")
+    parser.add_argument('--tau_cons', default=1, type=float, help="the temperature for contrastive loss")
 
     parser.add_argument('--ip', default='172.18.22.21', type=str, help='the IP address')
     parser.add_argument('--port', default=8888, type=int, help='the port')
@@ -816,6 +820,8 @@ if __name__ == "__main__":
     para_m = args.para_m
     cons_rate = args.cons_rate
     preprocess_norm = args.preprocess_norm
+    T_distil = args.T_distil
+    tau_cons = args.tau_cons
 
     # save_folder = './Online_DataCollected' + str(sub_name)
     #sanity check:
@@ -860,6 +866,8 @@ if __name__ == "__main__":
     args_dict.para_m = para_m
     args_dict.cons_rate = cons_rate
     args_dict.preprocess_norm = preprocess_norm
+    args_dict.T_distil = T_distil
+    args_dict.tau_cons = tau_cons
 
     seed_everything(seed)
     if mode == 'offline':
