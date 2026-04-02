@@ -624,7 +624,7 @@ def Online_updating_EEGNet_simulation(args_dict):
                 whole_model_is_best = False
                 whole_model_best_val_accuracy = 0
                 
-                _n_epoch_online = n_epoch_online * 2
+                _n_epoch_online = 3 #n_epoch_online
                 
                 
                 for epoch in trange(_n_epoch_online, desc='online classification update whole model'):
